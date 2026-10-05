@@ -1,0 +1,667 @@
+{
+  "version": 1,
+  "about": "Machine-readable catalog of the viz report component kit. SOURCE OF TRUTH for components. Pick by `source_shape`, copy `example_lines`, fill the slots.",
+  "css_source": "assets/template.html",
+  "rules": {
+    "authoring": "You write ONLY the body fragment — the <section> markup, shaped like references/body-skeleton.html. scripts/build_report.py splices it into assets/template.html. Never read or copy the template: ~25k chars of tokens, kit CSS and theme/lightbox scripts are added for you.",
+    "custom_css": "Report-local CSS goes in a <style> block at the top of the body fragment, under a `/* report-specific: <name> */` comment. The shared kit's <style> is in the shell's <head> and is not yours to edit. See references/custom-components.md.",
+    "colour": "Only design tokens (var(--accent), var(--green), ...). A literal hex anywhere outside the :root token blocks is a bug — one theme goes unreadable.",
+    "javascript": "Components must run with zero JS. The board renders reports in a sandboxed, script-free iframe; anything script-driven is invisible there.",
+    "external_assets": "No CDN, no remote fonts, no remote images. Reports must open offline from a file:// path.",
+    "caption": "Every diagram or chart-like block gets a sibling <p class=\"cap\">one line saying what the reader should take from it</p>. If the caption can't be written, delete the block.",
+    "diagram_budget": 1,
+    "diagram_budget_note": "At most 1 draw.io diagram per report - the big-picture one. A 2nd needs a separate branching flow and a stated reason (pass --diagram-budget 2 to the validator). Components are unlimited.",
+    "diagram_altitude": {
+      "principle": "A diagram is the big picture at product altitude - actors, concepts, outcomes in words a non-developer reads. Never the implementation with arrows.",
+      "labels": "Plain words, 5 or fewer, one line. No class, file, method, route, or table names (no SalePaymentService, no Report.jsx, no rows(), no GET /x/y, no cash_transactions). No <br/>.",
+      "nodes": "8 or fewer. More than that is a system, not a story - split into components.",
+      "edges": "Happy path only. Error, rollback, 4xx/5xx and infrastructure-failure edges belong in a sibling .callout, never in the graph. A branch is a product choice (matched / needs review), not a guard clause.",
+      "shapes": "No DB cylinders, no subgraph-per-layer, no condition-from-code edge labels.",
+      "identifiers_home": "Technical identifiers live in the file-touch map and breakdown cards. Put them there every time; the diagram never needs them.",
+      "validator": "scripts/diagram.py lint errors on identifiers, <br/>, and error-path words inside labels; warns on >8 nodes and >5-word labels. Fix by rewriting the label at product altitude, not by renaming past the regex."
+    },
+    "overflow": "Anything wider than the text column (tables, swimlanes, bridge charts, diagram images) goes in a container with class `card diagram` (which is overflow-x: auto), never a bare card.",
+    "diagram_allowed_when": {
+      "all_of": [
+        "the graph has a branch, a merge, a cycle, or a cross-cutting edge",
+        "the graph has 4 or more nodes"
+      ],
+      "otherwise": "Use `rail` (linear pipeline) or `chips` (2–3 ordering facts). A numbered task order is NOT evidence of dependencies."
+    }
+  },
+  "select": [
+    {
+      "source_shape": "Linear pipeline, stage sequence, 'then, then, then'",
+      "component": "rail"
+    },
+    {
+      "source_shape": "Phases cascading into each other, scope narrowing",
+      "component": "waterfall"
+    },
+    {
+      "source_shape": "Start value, +/- deltas, end total",
+      "component": "bridge"
+    },
+    {
+      "source_shape": "Magnitudes on one shared scale (effort, file counts)",
+      "component": "bars"
+    },
+    {
+      "source_shape": "Who does what at each stage (actor x stage)",
+      "component": "swim"
+    },
+    {
+      "source_shape": "Architecture as tiers (UI -> API -> store)",
+      "component": "stack"
+    },
+    {
+      "source_shape": "Headline counts (phases, tasks, files, endpoints)",
+      "component": "tiles"
+    },
+    {
+      "source_shape": "Before/after, current/proposed, option A vs B",
+      "component": "compare"
+    },
+    {
+      "source_shape": "Risk (likelihood x impact) or effort x value quadrants",
+      "component": "matrix"
+    },
+    {
+      "source_shape": "Dated milestones, rollout order",
+      "component": "timeline"
+    },
+    {
+      "source_shape": "Two or three ordering facts, blockers",
+      "component": "chips"
+    },
+    {
+      "source_shape": "A matrix of facts (thing x capability, current state)",
+      "component": "status-table"
+    },
+    {
+      "source_shape": "A constraint or gotcha that must not be skimmed past",
+      "component": "callout"
+    },
+    {
+      "source_shape": "Colour-coded anything",
+      "component": "legend"
+    },
+    {
+      "source_shape": "Inline qualifier on a heading",
+      "component": "tag"
+    },
+    {
+      "source_shape": "Branching / merging / cyclic flow with 4+ nodes, told at product altitude (actors, outcomes) - the one big-picture diagram",
+      "component": "diagram"
+    },
+    {
+      "source_shape": "None of the above",
+      "component": "CUSTOM — compose primitives, see references/custom-components.md"
+    }
+  ],
+  "primitives": [
+    {
+      "class": "box",
+      "purpose": "Neutral surface block: token background, border, radius, padding.",
+      "modifiers": [
+        "accent",
+        "good",
+        "warn",
+        "bad",
+        "flat"
+      ]
+    },
+    {
+      "class": "grid-2 / grid-3 / grid-4",
+      "purpose": "Auto-fitting responsive grids (min column 260 / 200 / 150px).",
+      "modifiers": []
+    },
+    {
+      "class": "hstack / vstack",
+      "purpose": "Flex row (wrapping, centre-aligned) / flex column, both gap 12px.",
+      "modifiers": []
+    },
+    {
+      "class": "split",
+      "purpose": "Row with children pushed to opposite ends, wraps on narrow screens.",
+      "modifiers": []
+    },
+    {
+      "class": "kv",
+      "purpose": "Two-column definition list of label/value rows that line up.",
+      "modifiers": []
+    },
+    {
+      "class": "u-muted / u-strong / u-sm / u-label / u-num / u-scroll-x",
+      "purpose": "Text + layout helpers: muted colour, semibold, 13px, uppercase micro-label, tabular numerals, horizontal scroll.",
+      "modifiers": []
+    },
+    {
+      "class": "u-accent / u-good / u-warn / u-bad",
+      "purpose": "Token text colours for a single element.",
+      "modifiers": []
+    }
+  ],
+  "components": [
+    {
+      "id": "rail",
+      "name": "Step rail",
+      "class": "rail",
+      "container": "card",
+      "use_for": "A linear pipeline, a stage sequence, 'then, then, then'.",
+      "replaces": "The default replacement for an A --> B --> C flowchart.",
+      "modifiers": {
+        "rail.vertical": "Stacks the steps and drops the chevrons — better past ~5 steps or with long descriptions.",
+        "step.done": "Green — completed stage.",
+        "step.now": "Amber — current stage."
+      },
+      "slots": {
+        "n": "step number",
+        "t": "step title",
+        "d": "one-line description (optional)"
+      },
+      "example_lines": [
+        "<div class=\"rail\">",
+        "  <div class=\"step done\">",
+        "    <span class=\"n\">1</span>",
+        "    <div class=\"t\">Ingest</div>",
+        "    <div class=\"d\">Poller pulls statements every 15 min.</div>",
+        "  </div>",
+        "  <div class=\"step now\">",
+        "    <span class=\"n\">2</span>",
+        "    <div class=\"t\">Normalise</div>",
+        "    <div class=\"d\">Provider payload becomes a canonical row.</div>",
+        "  </div>",
+        "  <div class=\"step\">",
+        "    <span class=\"n\">3</span>",
+        "    <div class=\"t\">Reconcile</div>",
+        "    <div class=\"d\">Match against open invoices.</div>",
+        "  </div>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Chevrons are drawn between steps and hidden below 640px, where the rail stacks."
+      ]
+    },
+    {
+      "id": "waterfall",
+      "name": "Waterfall (staircase)",
+      "class": "waterfall",
+      "container": "card",
+      "use_for": "Phases that descend into each other, scope narrowing, a cascade where each level is a consequence of the one above.",
+      "inline_vars": {
+        "--d": "Indent depth, 0 1 2 3 ... — set on each .wf. Varying it IS the component."
+      },
+      "modifiers": {
+        "wf.good": "green edge",
+        "wf.warn": "amber edge",
+        "wf.bad": "red edge"
+      },
+      "slots": {
+        "t": "phase title",
+        "d": "one-line consequence"
+      },
+      "example_lines": [
+        "<div class=\"waterfall\">",
+        "  <div class=\"wf\" style=\"--d:0\">",
+        "    <div class=\"t\">Phase 1 — Provider adapters</div>",
+        "    <div class=\"d\">One class per bank, behind a shared interface.</div>",
+        "  </div>",
+        "  <div class=\"wf good\" style=\"--d:1\">",
+        "    <div class=\"t\">Phase 2 — Watermark sync</div>",
+        "    <div class=\"d\">Possible only once adapters return a stable cursor.</div>",
+        "  </div>",
+        "  <div class=\"wf warn\" style=\"--d:2\">",
+        "    <div class=\"t\">Phase 3 — Cash-flow view</div>",
+        "    <div class=\"d\">Reads synced rows; blocked until Phase 2 lands.</div>",
+        "  </div>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Indent collapses to 0 below 640px so nothing overflows on mobile."
+      ]
+    },
+    {
+      "id": "bridge",
+      "name": "Waterfall (bridge bars)",
+      "class": "bridge",
+      "container": "card diagram",
+      "use_for": "The finance-style waterfall: a starting value, +/- deltas, a resulting total. Also budget or effort deltas between plan revisions.",
+      "inline_vars": {
+        "bottom": "Where the bar floats, % of the plot.",
+        "height": "The bar's magnitude, % of the plot."
+      },
+      "modifiers": {
+        "col.up": "green (increase)",
+        "col.down": "red (decrease)",
+        "col.total": "accent (baseline total)"
+      },
+      "slots": {
+        "v": "value label above the bar",
+        "lbl": "caption under the plot"
+      },
+      "example_lines": [
+        "<div class=\"bridge\">",
+        "  <div class=\"col total\">",
+        "    <div class=\"plot\"><div class=\"seg\" style=\"bottom:0;height:60%\"><span class=\"v\">42k</span></div></div>",
+        "    <div class=\"lbl\">Opening</div>",
+        "  </div>",
+        "  <div class=\"col up\">",
+        "    <div class=\"plot\"><div class=\"seg\" style=\"bottom:60%;height:26%\"><span class=\"v\">+18k</span></div></div>",
+        "    <div class=\"lbl\">Receivables</div>",
+        "  </div>",
+        "  <div class=\"col down\">",
+        "    <div class=\"plot\"><div class=\"seg\" style=\"bottom:70%;height:16%\"><span class=\"v\">-11k</span></div></div>",
+        "    <div class=\"lbl\">Payroll</div>",
+        "  </div>",
+        "  <div class=\"col total\">",
+        "    <div class=\"plot\"><div class=\"seg\" style=\"bottom:0;height:70%\"><span class=\"v\">49k</span></div></div>",
+        "    <div class=\"lbl\">Closing</div>",
+        "  </div>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Pick a scale first (above: 42k = 60%, so ~0.7k per point), then carry the running total forward: each bar's bottom is the previous bar's bottom+height.",
+        "A `down` bar starts where the previous ended and drops by its own height, so its bottom is prev_top minus height.",
+        "Totals sit on the baseline (bottom:0); only deltas float."
+      ]
+    },
+    {
+      "id": "bars",
+      "name": "Proportion bars",
+      "class": "bars",
+      "container": "card",
+      "use_for": "Magnitudes that share a scale — effort per phase, files per layer, test counts. Cheaper to read than a pie or a bar chart.",
+      "inline_vars": {
+        "width": "Fill width as a % of the track."
+      },
+      "modifiers": {
+        "fill.good": "green",
+        "fill.warn": "amber",
+        "fill.bad": "red"
+      },
+      "slots": {
+        "label": "first grid cell",
+        "track/fill": "the bar",
+        "num": "right-hand value"
+      },
+      "example_lines": [
+        "<div class=\"bars\">",
+        "  <div class=\"row\">",
+        "    <div>Backend</div>",
+        "    <div class=\"track\"><div class=\"fill\" style=\"width:72%\"></div></div>",
+        "    <div class=\"num\">18 files</div>",
+        "  </div>",
+        "  <div class=\"row\">",
+        "    <div>Frontend</div>",
+        "    <div class=\"track\"><div class=\"fill good\" style=\"width:40%\"></div></div>",
+        "    <div class=\"num\">10 files</div>",
+        "  </div>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Widths are percentages of the widest value, not of a total — keep one scale across all rows."
+      ]
+    },
+    {
+      "id": "swim",
+      "name": "Swimlane",
+      "class": "swim",
+      "container": "card diagram",
+      "use_for": "Who does what at each stage (actor x stage).",
+      "replaces": "A Mermaid flowchart full of subgraphs.",
+      "inline_vars": {
+        "--cols": "Number of stage columns (excludes the lane-label column)."
+      },
+      "modifiers": {
+        "cell.empty": "Dashed, faded — this actor does nothing at this stage."
+      },
+      "slots": {
+        "hd": "column header (first one empty)",
+        "lane": "actor name",
+        "cell": "what happens"
+      },
+      "example_lines": [
+        "<div class=\"swim\" style=\"--cols:3\">",
+        "  <div class=\"hd\"></div>",
+        "  <div class=\"hd\">Discover</div>",
+        "  <div class=\"hd\">Build</div>",
+        "  <div class=\"hd\">Verify</div>",
+        "",
+        "  <div class=\"lane\">Laptop agent</div>",
+        "  <div class=\"cell\">Claims the spawn job</div>",
+        "  <div class=\"cell\">Runs the session</div>",
+        "  <div class=\"cell empty\">—</div>",
+        "",
+        "  <div class=\"lane\">VPS</div>",
+        "  <div class=\"cell\">Queues the job</div>",
+        "  <div class=\"cell empty\">—</div>",
+        "  <div class=\"cell\">Stores artifacts</div>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Cells are laid out in reading order — emit exactly --cols cells after every .lane, including empties."
+      ]
+    },
+    {
+      "id": "stack",
+      "name": "Layer stack",
+      "class": "stack",
+      "container": "card",
+      "use_for": "Architecture drawn as tiers (UI -> API -> service -> store).",
+      "replaces": "The 'boxes stacked vertically' flowchart. This is the default for the Architecture section.",
+      "modifiers": {
+        "stack.up": "arrows point up",
+        "stack.both": "bidirectional arrows"
+      },
+      "slots": {
+        "name": "layer name",
+        "desc": "what lives there"
+      },
+      "example_lines": [
+        "<div class=\"stack\">",
+        "  <div class=\"band\">",
+        "    <span class=\"name\">React SPA</span>",
+        "    <span class=\"desc\">Cash-flow page, React Query services triad</span>",
+        "  </div>",
+        "  <div class=\"band\">",
+        "    <span class=\"name\">JSON API</span>",
+        "    <span class=\"desc\">Sanctum cookie auth, /api/cash-flow</span>",
+        "  </div>",
+        "  <div class=\"band\">",
+        "    <span class=\"name\">MySQL</span>",
+        "    <span class=\"desc\">Canonical rows, deduped by watermark</span>",
+        "  </div>",
+        "</div>"
+      ],
+      "gotchas": [
+        "The arrow is drawn in the gap under each band except the last — don't add your own."
+      ]
+    },
+    {
+      "id": "tiles",
+      "name": "Stat tiles",
+      "class": "tiles",
+      "container": "card",
+      "use_for": "The counts a reader wants before reading anything — phases, tasks, files, endpoints, estimated hours.",
+      "modifiers": {
+        "tile.accent": "blue value",
+        "tile.good": "green",
+        "tile.warn": "amber",
+        "tile.bad": "red"
+      },
+      "slots": {
+        "v": "the number",
+        "k": "what it counts"
+      },
+      "example_lines": [
+        "<div class=\"tiles\">",
+        "  <div class=\"tile accent\"><div class=\"v\">6</div><div class=\"k\">Phases</div></div>",
+        "  <div class=\"tile\"><div class=\"v\">23</div><div class=\"k\">Tasks</div></div>",
+        "  <div class=\"tile good\"><div class=\"v\">41</div><div class=\"k\">Files touched</div></div>",
+        "  <div class=\"tile warn\"><div class=\"v\">3</div><div class=\"k\">Open questions</div></div>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Only counts that exist in the source. Never derive an impressive-looking number the plan doesn't state."
+      ]
+    },
+    {
+      "id": "compare",
+      "name": "Compare",
+      "class": "compare",
+      "container": "none — .side elements carry their own card",
+      "use_for": "Before/after, current/proposed, option A vs option B.",
+      "modifiers": {
+        "side.before": "red top rule",
+        "side.after": "green top rule"
+      },
+      "slots": {
+        "h4": "column heading",
+        "ul": "points"
+      },
+      "example_lines": [
+        "<div class=\"compare\">",
+        "  <div class=\"card side before\">",
+        "    <h4>Today</h4>",
+        "    <ul><li>Statements pasted in by hand</li></ul>",
+        "  </div>",
+        "  <div class=\"card side after\">",
+        "    <h4>After</h4>",
+        "    <ul><li>Polled every 15 min, deduped at ingest</li></ul>",
+        "  </div>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Collapses to one column below 720px, so put the 'before' side first."
+      ]
+    },
+    {
+      "id": "matrix",
+      "name": "Matrix (2x2)",
+      "class": "matrix",
+      "container": "card",
+      "use_for": "Quadrants — risk (likelihood x impact), effort x value.",
+      "modifiers": {
+        "q.hot": "red border",
+        "q.warm": "amber border",
+        "q.cool": "green border"
+      },
+      "slots": {
+        "corner": "empty top-left cell",
+        "ax": "axis label",
+        "ax.y": "row axis label (rotated)",
+        "q": "quadrant"
+      },
+      "example_lines": [
+        "<div class=\"matrix\">",
+        "  <div class=\"corner\"></div>",
+        "  <div class=\"ax\">Low impact</div>",
+        "  <div class=\"ax\">High impact</div>",
+        "",
+        "  <div class=\"ax y\">Likely</div>",
+        "  <div class=\"q warm\"><h4>Watch</h4><ul><li>Rate limits</li></ul></div>",
+        "  <div class=\"q hot\"><h4>Mitigate first</h4><ul><li>Duplicate rows on retry</li></ul></div>",
+        "",
+        "  <div class=\"ax y\">Unlikely</div>",
+        "  <div class=\"q cool\"><h4>Accept</h4><ul><li>Provider renames a field</li></ul></div>",
+        "  <div class=\"q warm\"><h4>Plan for</h4><ul><li>Bank revokes the API key</li></ul></div>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Emit exactly: corner, 2 axis labels, then per row one .ax.y and two .q — the grid has no auto-placement slack."
+      ]
+    },
+    {
+      "id": "timeline",
+      "name": "Timeline",
+      "class": "timeline",
+      "container": "card",
+      "element": "ul",
+      "use_for": "Dated milestones or a rollout order. Use instead of a Gantt whenever there are no real durations.",
+      "modifiers": {
+        "li.done": "green dot",
+        "li.now": "amber dot"
+      },
+      "slots": {
+        "when": "date",
+        "what": "event",
+        "note": "optional detail"
+      },
+      "example_lines": [
+        "<ul class=\"timeline\">",
+        "  <li class=\"done\">",
+        "    <div class=\"when\">2026-08-02</div>",
+        "    <div class=\"what\">Spec approved</div>",
+        "    <div class=\"note\">Scope frozen to three providers.</div>",
+        "  </li>",
+        "  <li class=\"now\">",
+        "    <div class=\"when\">2026-08-14</div>",
+        "    <div class=\"what\">Adapters in review</div>",
+        "  </li>",
+        "</ul>"
+      ],
+      "gotchas": [
+        "Dates in the document's own format — never invent one that isn't in the source."
+      ]
+    },
+    {
+      "id": "chips",
+      "name": "Dependency chips",
+      "class": "chips",
+      "container": "card",
+      "use_for": "Two or three ordering facts, blockers.",
+      "replaces": "Every trivial dependency flowchart. Fan-out reads fine: one chip, arrow, several chips, arrow.",
+      "modifiers": {
+        "chip.accent": "blue",
+        "chip.good": "green",
+        "chip.warn": "amber",
+        "chip.bad": "red"
+      },
+      "slots": {
+        "chip": "task/step name",
+        "arrow": "the -> between groups"
+      },
+      "example_lines": [
+        "<div class=\"chips\">",
+        "  <span class=\"chip accent\">T1 Adapters</span>",
+        "  <span class=\"arrow\">→</span>",
+        "  <span class=\"chip\">T2 Watermark</span>",
+        "  <span class=\"chip\">T3 MCP tools</span>",
+        "  <span class=\"arrow\">→</span>",
+        "  <span class=\"chip good\">T4 Cash-flow page</span>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Chips between two arrows are understood as running in parallel — don't put a strict order there."
+      ]
+    },
+    {
+      "id": "status-table",
+      "name": "Status table",
+      "class": "status",
+      "element": "table",
+      "container": "card diagram",
+      "use_for": "A matrix of facts — integration x capability, module x state. Pair with tag chips so gaps are scannable.",
+      "modifiers": {},
+      "slots": {
+        "thead": "column headers",
+        "tbody": "one row per thing"
+      },
+      "example_lines": [
+        "<table class=\"status\">",
+        "  <thead>",
+        "    <tr><th>Integration</th><th>Statement import</th><th>Watermark</th></tr>",
+        "  </thead>",
+        "  <tbody>",
+        "    <tr>",
+        "      <td><strong>Pashabank B2B</strong></td>",
+        "      <td><span class=\"tag good\">yes</span></td>",
+        "      <td><span class=\"tag bad\">none</span></td>",
+        "    </tr>",
+        "  </tbody>",
+        "</table>"
+      ],
+      "gotchas": [
+        "Wrap in `card diagram` — wide tables must scroll inside the card, not stretch the page."
+      ]
+    },
+    {
+      "id": "callout",
+      "name": "Callout",
+      "class": "callout",
+      "container": "none — it is its own block",
+      "use_for": "A constraint or gotcha that must not be skimmed past.",
+      "modifiers": {
+        "callout.good": "green",
+        "callout.warn": "amber",
+        "callout.danger": "red"
+      },
+      "slots": {
+        "b": "short uppercase label",
+        "text": "the body"
+      },
+      "example_lines": [
+        "<div class=\"callout warn\">",
+        "  <b>Gotcha</b>",
+        "  MySQL caps index names at 64 chars — SQLite won't catch it in tests.",
+        "</div>"
+      ],
+      "gotchas": [
+        "Three or four per report at most; past that nothing stands out."
+      ]
+    },
+    {
+      "id": "legend",
+      "name": "Legend",
+      "class": "legend",
+      "container": "inside the diagram's card, after the visual",
+      "use_for": "Under any diagram whose colours carry meaning.",
+      "modifiers": {
+        "sw.good": "green swatch",
+        "sw.warn": "amber",
+        "sw.bad": "red",
+        "sw.muted": "grey"
+      },
+      "slots": {
+        "span": "swatch + label pair"
+      },
+      "example_lines": [
+        "<div class=\"legend\">",
+        "  <span><i class=\"sw\"></i>Planned</span>",
+        "  <span><i class=\"sw good\"></i>Done</span>",
+        "  <span><i class=\"sw warn\"></i>In progress</span>",
+        "  <span><i class=\"sw bad\"></i>Blocked</span>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Only add one where colour actually varies — a legend for a single-colour diagram is noise."
+      ]
+    },
+    {
+      "id": "tag",
+      "name": "Tag + caption",
+      "class": "tag",
+      "container": "inline",
+      "use_for": "`.tag` qualifies a heading inline; `.cap` is the one-line takeaway under a diagram.",
+      "modifiers": {
+        "tag.accent": "blue",
+        "tag.good": "green",
+        "tag.warn": "amber",
+        "tag.bad": "red"
+      },
+      "slots": {},
+      "example_lines": [
+        "<h3>Phase 2 — Watermark sync<span class=\"tag warn\">blocked</span></h3>",
+        "<p class=\"cap\">Every provider path converges on the same dedup gate.</p>"
+      ],
+      "gotchas": [
+        "Every diagram gets a .cap — if the takeaway can't be written, the diagram isn't earning its place."
+      ]
+    },
+    {
+      "id": "diagram",
+      "name": "draw.io diagram",
+      "class": "diagram",
+      "element": "img",
+      "container": "card diagram",
+      "use_for": "The one big-picture graph per report: a flow that branches, merges, or cycles, 4-8 nodes, plain words at product altitude. Built with scripts/diagram.py (DIAGRAM.md), embedded as its .drawio.png.",
+      "modifiers": {},
+      "slots": {
+        "img": "src = relative path to docs/diagrams/<topic>/<name>.drawio.png, alt = the caption",
+        "p.cap": "required takeaway line (same text as the .mmd caption)"
+      },
+      "example_lines": [
+        "<div class=\"card diagram\">",
+        "  <img src=\"../../diagrams/payments/match-flow.drawio.png\" alt=\"Every payment ends in one cash report.\">",
+        "  <p class=\"cap\">Every payment ends in one cash report.</p>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Build the diagram first (DIAGRAM.md); never write <pre class=\"mermaid\"> in a report.",
+        "The PNG keeps a white canvas in dark theme - that is expected.",
+        "Click opens the lightbox automatically; do not add handlers."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,420 @@
+<!--
+  Body of components-demo.html. That file is GENERATED — edit this one, then
+  rebuild so the demo can never drift from the CSS:
+
+    <skill>/scripts/build_report.py assets/demo-body.html assets/components-demo.html --no-suffix
+
+  --no-suffix because this page is a component catalogue, not a "… — Plan Report";
+  the title comes from the <h1> below. Same script builds real reports — see
+  references/body-skeleton.html.
+-->
+
+  <header>
+    <h1>Component kit — viz</h1>
+    <div class="meta">
+      Every component in the kit, both themes. Markup:
+      <code>references/components.json</code>
+    </div>
+    <div class="callout">
+      <b>Why these exist</b>
+      All zero JS, tokens only, no CDN — so they render in the board's sandboxed
+      task-tab iframe and offline. Most
+      "diagrams" in a plan report are one of these, not a graph.
+    </div>
+  </header>
+
+  <section>
+    <h2>1 · Stat tiles <span class="tag">.tiles</span></h2>
+    <div class="card">
+      <div class="tiles">
+        <div class="tile accent"><div class="v">6</div><div class="k">Phases</div></div>
+        <div class="tile"><div class="v">23</div><div class="k">Tasks</div></div>
+        <div class="tile good"><div class="v">41</div><div class="k">Files touched</div></div>
+        <div class="tile warn"><div class="v">3</div><div class="k">Open questions</div></div>
+      </div>
+      <p class="cap">The counts a reader wants before reading anything else.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>2 · Step rail <span class="tag accent">.rail</span></h2>
+    <div class="card">
+      <div class="rail">
+        <div class="step done">
+          <span class="n">1</span>
+          <div class="t">Ingest</div>
+          <div class="d">Poller pulls statements every 15 min.</div>
+        </div>
+        <div class="step now">
+          <span class="n">2</span>
+          <div class="t">Normalise</div>
+          <div class="d">Provider payload → canonical row.</div>
+        </div>
+        <div class="step">
+          <span class="n">3</span>
+          <div class="t">Reconcile</div>
+          <div class="d">Match against open invoices.</div>
+        </div>
+        <div class="step">
+          <span class="n">4</span>
+          <div class="t">Report</div>
+          <div class="d">Cash-flow page reads the reconciled ledger.</div>
+        </div>
+      </div>
+      <p class="cap">The default replacement for an <code>A --&gt; B --&gt; C</code> flowchart.</p>
+      <div class="legend">
+        <span><i class="sw"></i>Planned</span>
+        <span><i class="sw good"></i>Done</span>
+        <span><i class="sw warn"></i>In progress</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3 · Waterfall — staircase <span class="tag">.waterfall</span></h2>
+    <div class="card">
+      <div class="waterfall">
+        <div class="wf" style="--d:0">
+          <div class="t">Phase 1 — Provider adapters</div>
+          <div class="d">One class per bank, behind a shared interface.</div>
+        </div>
+        <div class="wf good" style="--d:1">
+          <div class="t">Phase 2 — Watermark sync</div>
+          <div class="d">Possible only once adapters return a stable cursor.</div>
+        </div>
+        <div class="wf warn" style="--d:2">
+          <div class="t">Phase 3 — Cash-flow view</div>
+          <div class="d">Reads synced rows; blocked until Phase 2 lands.</div>
+        </div>
+        <div class="wf bad" style="--d:3">
+          <div class="t">Phase 4 — Forecast</div>
+          <div class="d">Out of scope this cycle.</div>
+        </div>
+      </div>
+      <p class="cap">Each level is a consequence of the one above it.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>4 · Waterfall — bridge bars <span class="tag">.bridge</span></h2>
+    <div class="card diagram">
+      <div class="bridge">
+        <div class="col total">
+          <div class="plot"><div class="seg" style="bottom:0;height:60%"><span class="v">₼ 42k</span></div></div>
+          <div class="lbl">Opening</div>
+        </div>
+        <div class="col up">
+          <div class="plot"><div class="seg" style="bottom:60%;height:26%"><span class="v">+18k</span></div></div>
+          <div class="lbl">Receivables</div>
+        </div>
+        <div class="col down">
+          <div class="plot"><div class="seg" style="bottom:70%;height:16%"><span class="v">−11k</span></div></div>
+          <div class="lbl">Payroll</div>
+        </div>
+        <div class="col up">
+          <div class="plot"><div class="seg" style="bottom:70%;height:6%"><span class="v">+4k</span></div></div>
+          <div class="lbl">FX gain</div>
+        </div>
+        <div class="col down">
+          <div class="plot"><div class="seg" style="bottom:70%;height:6%"><span class="v">−4k</span></div></div>
+          <div class="lbl">Fees</div>
+        </div>
+        <div class="col total">
+          <div class="plot"><div class="seg" style="bottom:0;height:70%"><span class="v">₼ 49k</span></div></div>
+          <div class="lbl">Closing</div>
+        </div>
+      </div>
+      <p class="cap">Start value, signed deltas, resulting total — heights are inline percentages.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>5 · Proportion bars <span class="tag">.bars</span></h2>
+    <div class="card">
+      <div class="bars">
+        <div class="row">
+          <div>Backend</div>
+          <div class="track"><div class="fill" style="width:72%"></div></div>
+          <div class="num">18 files</div>
+        </div>
+        <div class="row">
+          <div>Frontend</div>
+          <div class="track"><div class="fill good" style="width:40%"></div></div>
+          <div class="num">10 files</div>
+        </div>
+        <div class="row">
+          <div>Migrations</div>
+          <div class="track"><div class="fill warn" style="width:16%"></div></div>
+          <div class="num">4 files</div>
+        </div>
+        <div class="row">
+          <div>Tests</div>
+          <div class="track"><div class="fill bad" style="width:36%"></div></div>
+          <div class="num">9 files</div>
+        </div>
+      </div>
+      <p class="cap">Magnitudes on one scale — cheaper to read than a pie.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>6 · Swimlane <span class="tag">.swim</span></h2>
+    <div class="card diagram">
+      <div class="swim" style="--cols:3">
+        <div class="hd"></div>
+        <div class="hd">Discover</div>
+        <div class="hd">Build</div>
+        <div class="hd">Verify</div>
+
+        <div class="lane">Laptop agent</div>
+        <div class="cell">Claims the spawn job</div>
+        <div class="cell">Runs the session</div>
+        <div class="cell empty">—</div>
+
+        <div class="lane">VPS</div>
+        <div class="cell">Queues the job</div>
+        <div class="cell empty">—</div>
+        <div class="cell">Stores artifacts</div>
+
+        <div class="lane">Human</div>
+        <div class="cell empty">—</div>
+        <div class="cell">Approves the plan gate</div>
+        <div class="cell">Reads the report</div>
+      </div>
+      <p class="cap">Actor × stage — replaces a flowchart full of subgraphs.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>7 · Layer stack <span class="tag">.stack</span></h2>
+    <div class="card">
+      <div class="stack">
+        <div class="band">
+          <span class="name">React SPA</span>
+          <span class="desc">Cash-flow page, React Query services triad</span>
+        </div>
+        <div class="band">
+          <span class="name">JSON API</span>
+          <span class="desc">Sanctum cookie auth, <code>/api/cash-flow</code></span>
+        </div>
+        <div class="band">
+          <span class="name">Provider adapters</span>
+          <span class="desc">Kapital, PASHA, ABB — one class each</span>
+        </div>
+        <div class="band">
+          <span class="name">MySQL</span>
+          <span class="desc">Canonical ledger rows, deduped by watermark</span>
+        </div>
+      </div>
+      <p class="cap">Architecture as tiers; <code>.stack.up</code> / <code>.stack.both</code> flip the arrows.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>8 · Compare <span class="tag">.compare</span></h2>
+    <div class="compare">
+      <div class="card side before">
+        <h4>Today</h4>
+        <ul>
+          <li>Statements pasted in by hand</li>
+          <li>Duplicates caught after the fact</li>
+          <li>No shared view of runway</li>
+        </ul>
+      </div>
+      <div class="card side after">
+        <h4>After</h4>
+        <ul>
+          <li>Polled every 15 min</li>
+          <li>Deduped at ingest by watermark</li>
+          <li>One cash-flow page for everyone</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>9 · Matrix <span class="tag">.matrix</span></h2>
+    <div class="card">
+      <div class="matrix">
+        <div class="corner"></div>
+        <div class="ax">Low impact</div>
+        <div class="ax">High impact</div>
+
+        <div class="ax y">Likely</div>
+        <div class="q warm"><h4>Watch</h4><ul><li>Provider rate limits</li></ul></div>
+        <div class="q hot"><h4>Mitigate first</h4><ul><li>Duplicate rows on retry</li></ul></div>
+
+        <div class="ax y">Unlikely</div>
+        <div class="q cool"><h4>Accept</h4><ul><li>Provider renames a field</li></ul></div>
+        <div class="q warm"><h4>Plan for</h4><ul><li>Bank revokes the API key</li></ul></div>
+      </div>
+      <p class="cap">Risk, or effort × value — same 2×2.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>10 · Timeline <span class="tag">.timeline</span></h2>
+    <div class="card">
+      <ul class="timeline">
+        <li class="done">
+          <div class="when">2026-08-02</div>
+          <div class="what">Spec approved</div>
+          <div class="note">Scope frozen to three providers.</div>
+        </li>
+        <li class="done">
+          <div class="when">2026-08-09</div>
+          <div class="what">Adapters merged</div>
+        </li>
+        <li class="now">
+          <div class="when">2026-08-14</div>
+          <div class="what">Watermark sync in review</div>
+        </li>
+        <li>
+          <div class="when">2026-08-21</div>
+          <div class="what">Cash-flow page ships</div>
+        </li>
+      </ul>
+      <p class="cap">Use instead of a Gantt whenever there are no real durations.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>11 · Chips <span class="tag">.chips</span></h2>
+    <div class="card">
+      <div class="chips">
+        <span class="chip accent">T1 Adapters</span>
+        <span class="arrow">→</span>
+        <span class="chip">T2 Watermark</span>
+        <span class="chip">T3 MCP tools</span>
+        <span class="arrow">→</span>
+        <span class="chip good">T4 Cash-flow page</span>
+        <span class="arrow">→</span>
+        <span class="chip bad">T5 Forecast (blocked)</span>
+      </div>
+      <p class="cap">Replaces every trivial dependency flowchart. Fan-out reads fine too.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>12 · Callouts <span class="tag">.callout</span></h2>
+    <div class="card">
+      <div class="callout"><b>Note</b>Diagram styling is automatic — never add a <code>%%{init}%%</code> block.</div>
+      <div class="callout good"><b>By construction</b>No component here runs a script, so nothing in a sandboxed task-tab iframe can block it.</div>
+      <div class="callout warn"><b>Gotcha</b>MySQL caps index names at 64 chars — SQLite won't catch it in tests.</div>
+      <div class="callout danger"><b>Blocker</b>Bank sandbox credentials expire every 30 days.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>13 · draw.io diagram <span class="tag accent">earned</span></h2>
+    <div class="card diagram">
+      <img src="demo-flow.drawio.png" alt="Each request goes to 1 of 2 results.">
+      <p class="cap">A branch and a loop: this one earns the graph. Built with scripts/diagram.py. Click to zoom.</p>
+    </div>
+    <div class="callout warn">
+      <b>Budget</b>
+      One diagram per report — the big-picture one, at product altitude
+      (actors, outcomes; no class or file names, no &lt;br/&gt;, happy path only).
+      A straight chain or fewer than four nodes is a step rail, not a flowchart.
+    </div>
+  </section>
+
+  <section>
+    <h2>14 · Primitives → custom builds <span class="tag accent">.box .grid .kv .split</span></h2>
+
+    <div class="card">
+      <div class="split">
+        <div class="u-label">Composed only — no new CSS</div>
+        <div class="u-sm u-muted">capacity ledger</div>
+      </div>
+      <div class="tiles" style="margin-top:12px">
+        <div class="tile accent"><div class="v u-num">40</div><div class="k">Dev-days</div></div>
+        <div class="tile warn"><div class="v u-num">36</div><div class="k">Claimed</div></div>
+        <div class="tile good"><div class="v u-num">4</div><div class="k">Free</div></div>
+      </div>
+      <div class="bars" style="margin-top:14px">
+        <div class="row">
+          <div>Sub-project 1</div>
+          <div class="track"><div class="fill" style="width:30%"></div></div>
+          <div class="num">12 d</div>
+        </div>
+        <div class="row">
+          <div>Sub-project 2</div>
+          <div class="track"><div class="fill warn" style="width:45%"></div></div>
+          <div class="num">18 d</div>
+        </div>
+        <div class="row">
+          <div>Support reserve</div>
+          <div class="track"><div class="fill good" style="width:15%"></div></div>
+          <div class="num">6 d</div>
+        </div>
+      </div>
+      <p class="cap">Four dev-days of slack — any scope growth lands on the support reserve.</p>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px">
+      <div class="box accent">
+        <div class="u-label">box + kv</div>
+        <dl class="kv" style="margin-top:8px">
+          <dt>Owner</dt><dd>Integration module</dd>
+          <dt>Risk</dt><dd class="u-warn">Provider rate limits</dd>
+          <dt>Effort</dt><dd class="u-num">12 dev-days</dd>
+        </dl>
+      </div>
+      <div class="box good">
+        <div class="u-label">box + vstack</div>
+        <div class="vstack" style="margin-top:8px">
+          <div class="split"><span class="u-strong">Adapters</span><span class="u-good u-sm">merged</span></div>
+          <div class="split"><span class="u-strong">Watermark</span><span class="u-warn u-sm">in review</span></div>
+          <div class="split"><span class="u-strong">Cash-flow page</span><span class="u-muted u-sm">not started</span></div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      /* ── report-specific: window strip ─────────────────────────
+         In a real report this block goes at the END of the page's own
+         <style>, never mixed into the shared kit. Tokens only. */
+      .window {
+        position: relative; height: 44px; border-radius: 10px;
+        background: var(--surface-2); border: 1px solid var(--border);
+      }
+      .window .span {
+        position: absolute; top: 6px; bottom: 6px; border-radius: 8px;
+        background: var(--accent); opacity: .55;
+      }
+      .window .ticks {
+        display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+        position: absolute; inset: 0; font-size: 11.5px; color: var(--muted);
+      }
+      .window .ticks span {
+        display: flex; align-items: center; justify-content: center;
+        border-left: 1px solid var(--border);
+      }
+      .window .ticks span:first-child { border-left: 0; }
+    </style>
+
+    <div class="card" style="margin-top:16px">
+      <div class="u-label" style="margin-bottom:10px">Custom geometry — ~12 lines of report-local CSS</div>
+      <div class="window">
+        <div class="span" style="left:25%;width:50%"></div>
+        <div class="ticks">
+          <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
+        </div>
+      </div>
+      <p class="cap">The migration window sits mid-rollout — weeks 1 and 4 are buffer.</p>
+    </div>
+
+    <div class="callout">
+      <b>Rule</b>
+      Build a custom component when nothing in <code>components.json</code> fits — but never
+      fall back to a diagram because no component matched. Contract and worked
+      examples: <code>references/custom-components.md</code>.
+    </div>
+  </section>
+
+  <footer>
+    <code>components-demo.html</code> is generated — edit <code>demo-body.html</code>,
+    then splice it into <code>template.html</code> between <code>&lt;main&gt;</code> and
+    <code>&lt;/main&gt;</code> (see the command in <code>demo-body.html</code>'s header comment).
+  </footer>

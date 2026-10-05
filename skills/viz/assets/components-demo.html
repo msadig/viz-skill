@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Component kit — viz</title>
+<script>
+  /* Theme boot — runs before paint so there is no flash. Light is the default;
+     a stored choice (if storage is reachable) wins. */
+  (function () {
+    try {
+      var t = localStorage.getItem('ezi-report-theme');
+      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+<style>
+  /* ── glass tokens ───────────────────────────────────────────────
+     Light is the default; [data-theme="dark"] overrides. Keep both
+     blocks in sync with skills/ezi-testing/report-template.html —
+     every report must look like the same family.
+     The --d-* set is diagram-only: solid (alpha-free) colours that
+     Mermaid's themeVariables can consume. */
+  :root {
+    --bg: #eef2f9;
+    --blob-1: rgba(96, 165, 250, .35);
+    --blob-2: rgba(167, 139, 250, .28);
+    --blob-3: rgba(45, 212, 191, .22);
+    --surface: rgba(255, 255, 255, .62);
+    --surface-2: rgba(255, 255, 255, .80);
+    --border: rgba(15, 23, 42, .12);
+    --hairline: rgba(255, 255, 255, .75);
+    --shadow: 0 8px 30px rgba(15, 23, 42, .08);
+    --text: #0f172a;
+    --muted: #52607a;
+    --accent: #1d4ed8;
+    --green: #047857;
+    --red: #b91c1c;
+    --amber: #b45309;
+    --scrim: rgba(15, 23, 42, .76);
+    --lb-text: rgba(255, 255, 255, .92);
+    --lb-btn-bg: rgba(255, 255, 255, .16);
+    --lb-btn-border: rgba(255, 255, 255, .30);
+    /* diagram-only solids */
+    --d-node: #ffffff;
+    --d-node-2: #e6ecf7;
+    --d-line: #7c8aa5;
+    --d-border: #c3cede;
+    --d-note: #fdf3d7;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0e14;
+    --blob-1: rgba(59, 130, 246, .22);
+    --blob-2: rgba(139, 92, 246, .18);
+    --blob-3: rgba(20, 184, 166, .14);
+    --surface: rgba(23, 30, 46, .62);
+    --surface-2: rgba(30, 39, 59, .78);
+    --border: rgba(148, 163, 184, .20);
+    --hairline: rgba(255, 255, 255, .10);
+    --shadow: 0 10px 34px rgba(0, 0, 0, .45);
+    --text: #e5e7eb;
+    --muted: #9aa7bd;
+    --accent: #60a5fa;
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --scrim: rgba(4, 6, 10, .78);
+    --d-node: #1b2436;
+    --d-node-2: #232f45;
+    --d-line: #64748b;
+    --d-border: #3a465e;
+    --d-note: #33301a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  /* fixed colour wash — what the glass chrome blurs */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(60vw 60vw at 12% -10%, var(--blob-1), transparent 60%),
+      radial-gradient(50vw 50vw at 92% 6%, var(--blob-2), transparent 60%),
+      radial-gradient(55vw 55vw at 50% 108%, var(--blob-3), transparent 60%);
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  h2 {
+    font-size: 20px; margin: 40px 0 16px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border); color: var(--accent);
+  }
+  h3 { font-size: 16px; margin: 0 0 8px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 1px 6px; font-size: 13px;
+  }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .meta a { margin-right: 12px; }
+
+  /* glass card — translucent + hairline, no per-card blur (dozens of
+     composited blur layers jank on scroll; real backdrop-filter is
+     reserved for the chrome: toggle pill + lightbox scrim) */
+  .card {
+    position: relative;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; box-shadow: var(--shadow);
+  }
+  .card::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+    background: var(--hairline); border-radius: 14px 14px 0 0; pointer-events: none;
+  }
+
+  /* theme toggle — hidden until JS reveals it (no JS in the board's
+     sandboxed task-tab iframe, where the light default stands alone) */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 40;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 999px;
+    box-shadow: var(--shadow); cursor: pointer;
+    font: inherit; font-size: 13px; padding: 7px 14px;
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+  .theme-toggle[hidden] { display: none; }
+  .tt-icon { font-size: 14px; line-height: 1; }
+  @media (max-width: 560px) { .tt-label { display: none; } }
+
+  .scope-goal { font-size: 16px; margin: 0 0 16px; }
+  .scope-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .scope-grid { grid-template-columns: 1fr; } }
+  .scope-col h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+  .scope-col.in h3 { color: var(--green); }
+  .scope-col.out h3 { color: var(--red); }
+  .scope-col ul { margin: 0; padding-left: 20px; }
+  .scope-col li { margin: 4px 0; }
+
+  .diagram { overflow-x: auto; padding: 16px; }
+  /* draw.io PNGs keep their own white canvas in both themes */
+  .diagram img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: 10px; cursor: zoom-in; }
+  .cap { color: var(--muted); font-size: 12.5px; margin: 10px 2px 0; }
+
+  .phases { display: flex; flex-direction: column; gap: 16px; }
+  .phase { border-left: 3px solid var(--accent); }
+  .phase .done-means { color: var(--muted); font-size: 13px; }
+  .phase ul { margin: 8px 0 0; padding-left: 20px; }
+  .phase li { margin: 6px 0; }
+
+  .layer-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .layer h3 { color: var(--amber); font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+  .layer ul { margin: 0; padding-left: 20px; }
+  .layer li { margin: 4px 0; font-size: 14px; }
+
+  /* ══ component kit ══════════════════════════════════════════════
+     Zero JS, tokens only, no CDN. Everything below renders inside the
+     board's sandboxed (script-free) task-tab iframe and offline —
+     which Mermaid does not.
+     Machine-readable catalog: references/components.json
+     Human-readable (generated from it): references/components.md */
+
+  /* ── primitives ──────────────────────────────────────────────────
+     The pieces a CUSTOM component is composed from. Build from these
+     before writing new CSS — they already speak the token system, so
+     anything made of them themes correctly in light and dark for free.
+     Rules + worked example: references/custom-components.md */
+  .box {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .box.accent { border-left: 3px solid var(--accent); }
+  .box.good { border-left: 3px solid var(--green); }
+  .box.warn { border-left: 3px solid var(--amber); }
+  .box.bad { border-left: 3px solid var(--red); }
+  .box.flat { background: transparent; }
+
+  .grid-2, .grid-3, .grid-4 { display: grid; gap: 12px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .grid-4 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
+  .hstack { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .vstack { display: flex; flex-direction: column; gap: 12px; }
+  .split {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    align-items: baseline; justify-content: space-between;
+  }
+
+  /* key/value rows — a <dl> that lines up */
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 5px 16px; margin: 0; font-size: 13.5px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; }
+
+  /* text + layout helpers */
+  .u-muted { color: var(--muted); }
+  .u-strong { font-weight: 600; }
+  .u-sm { font-size: 13px; }
+  .u-label {
+    font-size: 11.5px; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--muted);
+  }
+  .u-num { font-variant-numeric: tabular-nums; }
+  .u-scroll-x { overflow-x: auto; }
+  .u-accent { color: var(--accent); }
+  .u-good { color: var(--green); }
+  .u-warn { color: var(--amber); }
+  .u-bad { color: var(--red); }
+
+  /* tag — inline qualifier next to a heading */
+  .tag {
+    display: inline-block; vertical-align: middle; margin-left: 8px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px;
+  }
+  .tag.accent { color: var(--accent); border-color: var(--accent); }
+  .tag.good { color: var(--green); border-color: var(--green); }
+  .tag.bad { color: var(--red); border-color: var(--red); }
+  .tag.warn { color: var(--amber); border-color: var(--amber); }
+
+  /* step rail — linear progressions. Replaces A-->B-->C flowcharts. */
+  .rail { display: flex; flex-wrap: wrap; gap: 22px; }
+  .rail .step {
+    position: relative; flex: 1 1 190px; min-width: 190px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .rail .step .n {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; margin-bottom: 6px; border-radius: 999px;
+    background: var(--accent); color: var(--bg);
+    font-size: 12px; font-weight: 700;
+  }
+  .rail .step .t { font-weight: 600; }
+  .rail .step .d { color: var(--muted); font-size: 13px; }
+  .rail .step:not(:last-child)::after {
+    content: "›"; position: absolute; right: -16px; top: 50%;
+    transform: translateY(-50%); color: var(--muted); font-size: 22px;
+  }
+  .rail.vertical { flex-direction: column; gap: 10px; }
+  .rail.vertical .step::after { content: none; }
+  .rail .step.done { border-color: var(--green); }
+  .rail .step.done .n { background: var(--green); }
+  .rail .step.now { border-color: var(--amber); }
+  .rail .step.now .n { background: var(--amber); }
+  @media (max-width: 640px) {
+    .rail { flex-direction: column; gap: 10px; }
+    .rail .step::after { content: none; }
+  }
+
+  /* waterfall (staircase) — phases descending, each indented by --d */
+  .waterfall { display: flex; flex-direction: column; gap: 8px; }
+  .waterfall .wf {
+    margin-left: calc(var(--d, 0) * 34px);
+    width: calc(100% - var(--d, 0) * 34px);
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 10px;
+    padding: 11px 14px;
+  }
+  .waterfall .wf .t { font-weight: 600; }
+  .waterfall .wf .d { color: var(--muted); font-size: 13px; }
+  .waterfall .wf.good { border-left-color: var(--green); }
+  .waterfall .wf.warn { border-left-color: var(--amber); }
+  .waterfall .wf.bad { border-left-color: var(--red); }
+  @media (max-width: 640px) {
+    .waterfall .wf { margin-left: 0; width: 100%; }
+  }
+
+  /* bridge — finance-style waterfall bars (start, +/- deltas, end).
+     Each .seg is absolutely placed inside its .plot: inline `bottom` is
+     where the bar floats, inline `height` is its magnitude — both % of
+     the plot, so a running total is just bottom+height of the last bar. */
+  .bridge { display: flex; align-items: flex-end; gap: 14px; min-width: 480px; }
+  .bridge .col { flex: 1; min-width: 56px; }
+  .bridge .plot {
+    position: relative; height: 210px; border-bottom: 1px solid var(--border);
+  }
+  .bridge .seg {
+    position: absolute; left: 0; right: 0; min-height: 4px;
+    background: var(--accent); border: 1px solid var(--border); border-radius: 6px;
+  }
+  .bridge .seg .v {
+    position: absolute; left: -6px; right: -6px; top: -21px;
+    text-align: center; font-size: 12.5px; font-weight: 600; color: var(--text);
+  }
+  .bridge .lbl {
+    margin-top: 7px; font-size: 12px; color: var(--muted);
+    text-align: center; line-height: 1.3;
+  }
+  .bridge .col.up .seg { background: var(--green); }
+  .bridge .col.down .seg { background: var(--red); }
+  .bridge .col.total .seg { background: var(--accent); }
+  .bridge .col.up .seg .v { color: var(--green); }
+  .bridge .col.down .seg .v { color: var(--red); }
+
+  /* proportion bars — labelled horizontal magnitudes */
+  .bars { display: flex; flex-direction: column; gap: 10px; }
+  .bars .row {
+    display: grid; grid-template-columns: 160px 1fr 62px;
+    gap: 12px; align-items: center; font-size: 13px;
+  }
+  .bars .track { background: var(--border); border-radius: 999px; height: 10px; }
+  .bars .fill { height: 100%; border-radius: 999px; background: var(--accent); }
+  .bars .fill.good { background: var(--green); }
+  .bars .fill.warn { background: var(--amber); }
+  .bars .fill.bad { background: var(--red); }
+  .bars .num { color: var(--muted); text-align: right; }
+  @media (max-width: 640px) { .bars .row { grid-template-columns: 110px 1fr 50px; } }
+
+  /* swimlane — actor × stage. --cols = number of stage columns. */
+  .swim {
+    display: grid; gap: 8px; min-width: 620px;
+    grid-template-columns: 150px repeat(var(--cols, 3), minmax(140px, 1fr));
+  }
+  .swim .hd {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); padding: 2px 6px; align-self: end;
+  }
+  .swim .lane {
+    display: flex; align-items: center; font-size: 13px; font-weight: 600;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .swim .cell {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 10px;
+    padding: 10px 12px; font-size: 13px;
+  }
+  .swim .cell.empty {
+    background: transparent; border: 1px dashed var(--border); opacity: .5;
+  }
+
+  /* layer stack — architecture as stacked bands, top to bottom */
+  .stack { display: flex; flex-direction: column; gap: 20px; }
+  .stack .band {
+    position: relative; display: flex; flex-wrap: wrap; gap: 4px 12px;
+    align-items: baseline; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px;
+  }
+  .stack .band .name { font-weight: 600; }
+  .stack .band .desc { color: var(--muted); font-size: 13px; }
+  .stack .band:not(:last-child)::after {
+    content: "↓"; position: absolute; left: 50%; bottom: -20px;
+    transform: translateX(-50%); color: var(--muted); font-size: 15px; line-height: 20px;
+  }
+  .stack.up .band:not(:last-child)::after { content: "↑"; }
+  .stack.both .band:not(:last-child)::after { content: "↕"; }
+
+  /* stat tiles — counts that would otherwise be a sentence */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .tile {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .tile .v { font-size: 26px; font-weight: 650; line-height: 1.15; }
+  .tile .k {
+    font-size: 11.5px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .05em;
+  }
+  .tile.accent .v { color: var(--accent); }
+  .tile.good .v { color: var(--green); }
+  .tile.warn .v { color: var(--amber); }
+  .tile.bad .v { color: var(--red); }
+
+  /* compare — before/after, option A/B */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .compare .side {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-top: 3px solid var(--muted); border-radius: 12px; padding: 14px 16px;
+  }
+  .compare .side h4 {
+    margin: 0 0 8px; font-size: 12px; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .compare .side ul { margin: 0; padding-left: 18px; font-size: 14px; }
+  .compare .side li { margin: 4px 0; }
+  .compare .side.before { border-top-color: var(--red); }
+  .compare .side.after { border-top-color: var(--green); }
+  @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+
+  /* matrix — 2×2 risk / decision quadrants */
+  .matrix {
+    display: grid; gap: 8px;
+    grid-template-columns: 26px 1fr 1fr;
+    grid-template-rows: auto 1fr 1fr;
+  }
+  .matrix .ax {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11.5px; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--muted);
+  }
+  .matrix .ax.y { writing-mode: vertical-rl; transform: rotate(180deg); }
+  .matrix .corner { grid-column: 1; grid-row: 1; }
+  .matrix .q {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; min-height: 108px;
+  }
+  .matrix .q h4 {
+    margin: 0 0 6px; font-size: 11.5px; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--muted);
+  }
+  .matrix .q ul { margin: 0; padding-left: 17px; font-size: 13px; }
+  .matrix .q.hot { border-color: var(--red); }
+  .matrix .q.warm { border-color: var(--amber); }
+  .matrix .q.cool { border-color: var(--green); }
+
+  /* timeline — dated events, vertical */
+  .timeline {
+    position: relative; list-style: none;
+    margin: 0; padding: 4px 0 0 24px; border-left: 2px solid var(--border);
+  }
+  .timeline li { position: relative; padding: 0 0 18px 8px; }
+  .timeline li::before {
+    content: ""; position: absolute; left: -30px; top: 7px;
+    width: 10px; height: 10px; border-radius: 999px;
+    background: var(--accent); border: 2px solid var(--bg);
+  }
+  .timeline li.done::before { background: var(--green); }
+  .timeline li.now::before { background: var(--amber); }
+  .timeline .when {
+    font-size: 11.5px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .05em;
+  }
+  .timeline .what { font-weight: 600; }
+  .timeline .note { color: var(--muted); font-size: 13px; }
+
+  /* chips — dependencies/blockers too small to deserve a graph */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 12px;
+  }
+  .chip.accent { color: var(--accent); border-color: var(--accent); }
+  .chip.good { color: var(--green); border-color: var(--green); }
+  .chip.bad { color: var(--red); border-color: var(--red); }
+  .chip.warn { color: var(--amber); border-color: var(--amber); }
+  .chips .arrow { color: var(--muted); }
+
+  /* callout — a caveat that must not be missed */
+  .callout {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 10px;
+    padding: 12px 16px; font-size: 14px; margin: 12px 0;
+  }
+  .callout b {
+    display: block; margin-bottom: 3px; font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+  }
+  .callout.good { border-left-color: var(--green); }
+  .callout.warn { border-left-color: var(--amber); }
+  .callout.danger { border-left-color: var(--red); }
+
+  /* status table — a matrix of facts (integration × capability) */
+  table.status { border-collapse: collapse; width: 100%; font-size: 14px; }
+  table.status th, table.status td {
+    text-align: left; padding: 8px 10px; vertical-align: top;
+    border-bottom: 1px solid var(--border);
+  }
+  table.status th {
+    color: var(--muted); font-size: 11.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .05em;
+  }
+  table.status tr:last-child td { border-bottom: 0; }
+
+  /* legend — what the colours mean, under a diagram */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin-top: 12px; font-size: 12px; color: var(--muted);
+  }
+  .legend .sw {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 3px; margin-right: 6px; background: var(--accent);
+  }
+  .legend .sw.good { background: var(--green); }
+  .legend .sw.warn { background: var(--amber); }
+  .legend .sw.bad { background: var(--red); }
+  .legend .sw.muted { background: var(--muted); }
+
+  main img { max-width: 100%; border-radius: 8px; cursor: zoom-in; }
+  .gallery { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+  .gallery img { height: 160px; width: auto; flex: 0 0 auto; }
+
+  #lightbox {
+    position: fixed; inset: 0; z-index: 50; display: none;
+    align-items: center; justify-content: center;
+    background: var(--scrim);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  #lightbox.open { display: flex; }
+  #lb-img { max-width: 92vw; max-height: 88vh; border-radius: 10px; cursor: default; }
+  .lb-btn {
+    position: absolute; background: var(--lb-btn-bg); color: var(--lb-text);
+    border: 1px solid var(--lb-btn-border); border-radius: 10px; cursor: pointer;
+    font-size: 20px; line-height: 1; padding: 10px 14px;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .lb-btn:hover { background: rgba(255, 255, 255, .28); } /* validator-ok: chrome over the scrim, not the page */
+  #lb-close { top: 16px; right: 16px; }
+  #lb-prev { left: 16px; top: 50%; transform: translateY(-50%); }
+  #lb-next { right: 16px; top: 50%; transform: translateY(-50%); }
+  #lb-counter {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    color: var(--lb-text); font-size: 13px;
+  }
+  footer { margin-top: 48px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch colour theme" hidden>
+  <span class="tt-icon">☾</span><span class="tt-label">Dark</span>
+</button>
+
+<main>
+<!--
+  Body of components-demo.html. That file is GENERATED — edit this one, then
+  rebuild so the demo can never drift from the CSS:
+
+    <skill>/scripts/build_report.py assets/demo-body.html assets/components-demo.html --no-suffix
+
+  --no-suffix because this page is a component catalogue, not a "… — Plan Report";
+  the title comes from the <h1> below. Same script builds real reports — see
+  references/body-skeleton.html.
+-->
+
+  <header>
+    <h1>Component kit — viz</h1>
+    <div class="meta">
+      Every component in the kit, both themes. Markup:
+      <code>references/components.json</code>
+    </div>
+    <div class="callout">
+      <b>Why these exist</b>
+      All zero JS, tokens only, no CDN — so they render in the board's sandboxed
+      task-tab iframe and offline. Most
+      "diagrams" in a plan report are one of these, not a graph.
+    </div>
+  </header>
+
+  <section>
+    <h2>1 · Stat tiles <span class="tag">.tiles</span></h2>
+    <div class="card">
+      <div class="tiles">
+        <div class="tile accent"><div class="v">6</div><div class="k">Phases</div></div>
+        <div class="tile"><div class="v">23</div><div class="k">Tasks</div></div>
+        <div class="tile good"><div class="v">41</div><div class="k">Files touched</div></div>
+        <div class="tile warn"><div class="v">3</div><div class="k">Open questions</div></div>
+      </div>
+      <p class="cap">The counts a reader wants before reading anything else.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>2 · Step rail <span class="tag accent">.rail</span></h2>
+    <div class="card">
+      <div class="rail">
+        <div class="step done">
+          <span class="n">1</span>
+          <div class="t">Ingest</div>
+          <div class="d">Poller pulls statements every 15 min.</div>
+        </div>
+        <div class="step now">
+          <span class="n">2</span>
+          <div class="t">Normalise</div>
+          <div class="d">Provider payload → canonical row.</div>
+        </div>
+        <div class="step">
+          <span class="n">3</span>
+          <div class="t">Reconcile</div>
+          <div class="d">Match against open invoices.</div>
+        </div>
+        <div class="step">
+          <span class="n">4</span>
+          <div class="t">Report</div>
+          <div class="d">Cash-flow page reads the reconciled ledger.</div>
+        </div>
+      </div>
+      <p class="cap">The default replacement for an <code>A --&gt; B --&gt; C</code> flowchart.</p>
+      <div class="legend">
+        <span><i class="sw"></i>Planned</span>
+        <span><i class="sw good"></i>Done</span>
+        <span><i class="sw warn"></i>In progress</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3 · Waterfall — staircase <span class="tag">.waterfall</span></h2>
+    <div class="card">
+      <div class="waterfall">
+        <div class="wf" style="--d:0">
+          <div class="t">Phase 1 — Provider adapters</div>
+          <div class="d">One class per bank, behind a shared interface.</div>
+        </div>
+        <div class="wf good" style="--d:1">
+          <div class="t">Phase 2 — Watermark sync</div>
+          <div class="d">Possible only once adapters return a stable cursor.</div>
+        </div>
+        <div class="wf warn" style="--d:2">
+          <div class="t">Phase 3 — Cash-flow view</div>
+          <div class="d">Reads synced rows; blocked until Phase 2 lands.</div>
+        </div>
+        <div class="wf bad" style="--d:3">
+          <div class="t">Phase 4 — Forecast</div>
+          <div class="d">Out of scope this cycle.</div>
+        </div>
+      </div>
+      <p class="cap">Each level is a consequence of the one above it.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>4 · Waterfall — bridge bars <span class="tag">.bridge</span></h2>
+    <div class="card diagram">
+      <div class="bridge">
+        <div class="col total">
+          <div class="plot"><div class="seg" style="bottom:0;height:60%"><span class="v">₼ 42k</span></div></div>
+          <div class="lbl">Opening</div>
+        </div>
+        <div class="col up">
+          <div class="plot"><div class="seg" style="bottom:60%;height:26%"><span class="v">+18k</span></div></div>
+          <div class="lbl">Receivables</div>
+        </div>
+        <div class="col down">
+          <div class="plot"><div class="seg" style="bottom:70%;height:16%"><span class="v">−11k</span></div></div>
+          <div class="lbl">Payroll</div>
+        </div>
+        <div class="col up">
+          <div class="plot"><div class="seg" style="bottom:70%;height:6%"><span class="v">+4k</span></div></div>
+          <div class="lbl">FX gain</div>
+        </div>
+        <div class="col down">
+          <div class="plot"><div class="seg" style="bottom:70%;height:6%"><span class="v">−4k</span></div></div>
+          <div class="lbl">Fees</div>
+        </div>
+        <div class="col total">
+          <div class="plot"><div class="seg" style="bottom:0;height:70%"><span class="v">₼ 49k</span></div></div>
+          <div class="lbl">Closing</div>
+        </div>
+      </div>
+      <p class="cap">Start value, signed deltas, resulting total — heights are inline percentages.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>5 · Proportion bars <span class="tag">.bars</span></h2>
+    <div class="card">
+      <div class="bars">
+        <div class="row">
+          <div>Backend</div>
+          <div class="track"><div class="fill" style="width:72%"></div></div>
+          <div class="num">18 files</div>
+        </div>
+        <div class="row">
+          <div>Frontend</div>
+          <div class="track"><div class="fill good" style="width:40%"></div></div>
+          <div class="num">10 files</div>
+        </div>
+        <div class="row">
+          <div>Migrations</div>
+          <div class="track"><div class="fill warn" style="width:16%"></div></div>
+          <div class="num">4 files</div>
+        </div>
+        <div class="row">
+          <div>Tests</div>
+          <div class="track"><div class="fill bad" style="width:36%"></div></div>
+          <div class="num">9 files</div>
+        </div>
+      </div>
+      <p class="cap">Magnitudes on one scale — cheaper to read than a pie.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>6 · Swimlane <span class="tag">.swim</span></h2>
+    <div class="card diagram">
+      <div class="swim" style="--cols:3">
+        <div class="hd"></div>
+        <div class="hd">Discover</div>
+        <div class="hd">Build</div>
+        <div class="hd">Verify</div>
+
+        <div class="lane">Laptop agent</div>
+        <div class="cell">Claims the spawn job</div>
+        <div class="cell">Runs the session</div>
+        <div class="cell empty">—</div>
+
+        <div class="lane">VPS</div>
+        <div class="cell">Queues the job</div>
+        <div class="cell empty">—</div>
+        <div class="cell">Stores artifacts</div>
+
+        <div class="lane">Human</div>
+        <div class="cell empty">—</div>
+        <div class="cell">Approves the plan gate</div>
+        <div class="cell">Reads the report</div>
+      </div>
+      <p class="cap">Actor × stage — replaces a flowchart full of subgraphs.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>7 · Layer stack <span class="tag">.stack</span></h2>
+    <div class="card">
+      <div class="stack">
+        <div class="band">
+          <span class="name">React SPA</span>
+          <span class="desc">Cash-flow page, React Query services triad</span>
+        </div>
+        <div class="band">
+          <span class="name">JSON API</span>
+          <span class="desc">Sanctum cookie auth, <code>/api/cash-flow</code></span>
+        </div>
+        <div class="band">
+          <span class="name">Provider adapters</span>
+          <span class="desc">Kapital, PASHA, ABB — one class each</span>
+        </div>
+        <div class="band">
+          <span class="name">MySQL</span>
+          <span class="desc">Canonical ledger rows, deduped by watermark</span>
+        </div>
+      </div>
+      <p class="cap">Architecture as tiers; <code>.stack.up</code> / <code>.stack.both</code> flip the arrows.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>8 · Compare <span class="tag">.compare</span></h2>
+    <div class="compare">
+      <div class="card side before">
+        <h4>Today</h4>
+        <ul>
+          <li>Statements pasted in by hand</li>
+          <li>Duplicates caught after the fact</li>
+          <li>No shared view of runway</li>
+        </ul>
+      </div>
+      <div class="card side after">
+        <h4>After</h4>
+        <ul>
+          <li>Polled every 15 min</li>
+          <li>Deduped at ingest by watermark</li>
+          <li>One cash-flow page for everyone</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>9 · Matrix <span class="tag">.matrix</span></h2>
+    <div class="card">
+      <div class="matrix">
+        <div class="corner"></div>
+        <div class="ax">Low impact</div>
+        <div class="ax">High impact</div>
+
+        <div class="ax y">Likely</div>
+        <div class="q warm"><h4>Watch</h4><ul><li>Provider rate limits</li></ul></div>
+        <div class="q hot"><h4>Mitigate first</h4><ul><li>Duplicate rows on retry</li></ul></div>
+
+        <div class="ax y">Unlikely</div>
+        <div class="q cool"><h4>Accept</h4><ul><li>Provider renames a field</li></ul></div>
+        <div class="q warm"><h4>Plan for</h4><ul><li>Bank revokes the API key</li></ul></div>
+      </div>
+      <p class="cap">Risk, or effort × value — same 2×2.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>10 · Timeline <span class="tag">.timeline</span></h2>
+    <div class="card">
+      <ul class="timeline">
+        <li class="done">
+          <div class="when">2026-08-02</div>
+          <div class="what">Spec approved</div>
+          <div class="note">Scope frozen to three providers.</div>
+        </li>
+        <li class="done">
+          <div class="when">2026-08-09</div>
+          <div class="what">Adapters merged</div>
+        </li>
+        <li class="now">
+          <div class="when">2026-08-14</div>
+          <div class="what">Watermark sync in review</div>
+        </li>
+        <li>
+          <div class="when">2026-08-21</div>
+          <div class="what">Cash-flow page ships</div>
+        </li>
+      </ul>
+      <p class="cap">Use instead of a Gantt whenever there are no real durations.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>11 · Chips <span class="tag">.chips</span></h2>
+    <div class="card">
+      <div class="chips">
+        <span class="chip accent">T1 Adapters</span>
+        <span class="arrow">→</span>
+        <span class="chip">T2 Watermark</span>
+        <span class="chip">T3 MCP tools</span>
+        <span class="arrow">→</span>
+        <span class="chip good">T4 Cash-flow page</span>
+        <span class="arrow">→</span>
+        <span class="chip bad">T5 Forecast (blocked)</span>
+      </div>
+      <p class="cap">Replaces every trivial dependency flowchart. Fan-out reads fine too.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>12 · Callouts <span class="tag">.callout</span></h2>
+    <div class="card">
+      <div class="callout"><b>Note</b>Diagram styling is automatic — never add a <code>%%{init}%%</code> block.</div>
+      <div class="callout good"><b>By construction</b>No component here runs a script, so nothing in a sandboxed task-tab iframe can block it.</div>
+      <div class="callout warn"><b>Gotcha</b>MySQL caps index names at 64 chars — SQLite won't catch it in tests.</div>
+      <div class="callout danger"><b>Blocker</b>Bank sandbox credentials expire every 30 days.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>13 · draw.io diagram <span class="tag accent">earned</span></h2>
+    <div class="card diagram">
+      <img src="demo-flow.drawio.png" alt="Each request goes to 1 of 2 results.">
+      <p class="cap">A branch and a loop: this one earns the graph. Built with scripts/diagram.py. Click to zoom.</p>
+    </div>
+    <div class="callout warn">
+      <b>Budget</b>
+      One diagram per report — the big-picture one, at product altitude
+      (actors, outcomes; no class or file names, no &lt;br/&gt;, happy path only).
+      A straight chain or fewer than four nodes is a step rail, not a flowchart.
+    </div>
+  </section>
+
+  <section>
+    <h2>14 · Primitives → custom builds <span class="tag accent">.box .grid .kv .split</span></h2>
+
+    <div class="card">
+      <div class="split">
+        <div class="u-label">Composed only — no new CSS</div>
+        <div class="u-sm u-muted">capacity ledger</div>
+      </div>
+      <div class="tiles" style="margin-top:12px">
+        <div class="tile accent"><div class="v u-num">40</div><div class="k">Dev-days</div></div>
+        <div class="tile warn"><div class="v u-num">36</div><div class="k">Claimed</div></div>
+        <div class="tile good"><div class="v u-num">4</div><div class="k">Free</div></div>
+      </div>
+      <div class="bars" style="margin-top:14px">
+        <div class="row">
+          <div>Sub-project 1</div>
+          <div class="track"><div class="fill" style="width:30%"></div></div>
+          <div class="num">12 d</div>
+        </div>
+        <div class="row">
+          <div>Sub-project 2</div>
+          <div class="track"><div class="fill warn" style="width:45%"></div></div>
+          <div class="num">18 d</div>
+        </div>
+        <div class="row">
+          <div>Support reserve</div>
+          <div class="track"><div class="fill good" style="width:15%"></div></div>
+          <div class="num">6 d</div>
+        </div>
+      </div>
+      <p class="cap">Four dev-days of slack — any scope growth lands on the support reserve.</p>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px">
+      <div class="box accent">
+        <div class="u-label">box + kv</div>
+        <dl class="kv" style="margin-top:8px">
+          <dt>Owner</dt><dd>Integration module</dd>
+          <dt>Risk</dt><dd class="u-warn">Provider rate limits</dd>
+          <dt>Effort</dt><dd class="u-num">12 dev-days</dd>
+        </dl>
+      </div>
+      <div class="box good">
+        <div class="u-label">box + vstack</div>
+        <div class="vstack" style="margin-top:8px">
+          <div class="split"><span class="u-strong">Adapters</span><span class="u-good u-sm">merged</span></div>
+          <div class="split"><span class="u-strong">Watermark</span><span class="u-warn u-sm">in review</span></div>
+          <div class="split"><span class="u-strong">Cash-flow page</span><span class="u-muted u-sm">not started</span></div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      /* ── report-specific: window strip ─────────────────────────
+         In a real report this block goes at the END of the page's own
+         <style>, never mixed into the shared kit. Tokens only. */
+      .window {
+        position: relative; height: 44px; border-radius: 10px;
+        background: var(--surface-2); border: 1px solid var(--border);
+      }
+      .window .span {
+        position: absolute; top: 6px; bottom: 6px; border-radius: 8px;
+        background: var(--accent); opacity: .55;
+      }
+      .window .ticks {
+        display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+        position: absolute; inset: 0; font-size: 11.5px; color: var(--muted);
+      }
+      .window .ticks span {
+        display: flex; align-items: center; justify-content: center;
+        border-left: 1px solid var(--border);
+      }
+      .window .ticks span:first-child { border-left: 0; }
+    </style>
+
+    <div class="card" style="margin-top:16px">
+      <div class="u-label" style="margin-bottom:10px">Custom geometry — ~12 lines of report-local CSS</div>
+      <div class="window">
+        <div class="span" style="left:25%;width:50%"></div>
+        <div class="ticks">
+          <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
+        </div>
+      </div>
+      <p class="cap">The migration window sits mid-rollout — weeks 1 and 4 are buffer.</p>
+    </div>
+
+    <div class="callout">
+      <b>Rule</b>
+      Build a custom component when nothing in <code>components.json</code> fits — but never
+      fall back to a diagram because no component matched. Contract and worked
+      examples: <code>references/custom-components.md</code>.
+    </div>
+  </section>
+
+  <footer>
+    <code>components-demo.html</code> is generated — edit <code>demo-body.html</code>,
+    then splice it into <code>template.html</code> between <code>&lt;main&gt;</code> and
+    <code>&lt;/main&gt;</code> (see the command in <code>demo-body.html</code>'s header comment).
+  </footer>
+</main>
+
+<div id="lightbox" aria-hidden="true">
+  <button class="lb-btn" id="lb-close" aria-label="Close">✕</button>
+  <button class="lb-btn" id="lb-prev" aria-label="Previous">‹</button>
+  <button class="lb-btn" id="lb-next" aria-label="Next">›</button>
+  <img id="lb-img" alt="">
+  <div id="lb-counter"></div>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('theme-toggle');
+    function mode() { return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+    function paint() {
+      if (!btn) return;
+      var dark = mode() === 'dark';
+      btn.querySelector('.tt-icon').textContent = dark ? '☀' : '☾';
+      btn.querySelector('.tt-label').textContent = dark ? 'Light' : 'Dark';
+    }
+    function apply(next) {
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('ezi-report-theme', next); } catch (e) {}
+      paint();
+    }
+    if (btn) {
+      btn.hidden = false;
+      paint();
+      btn.addEventListener('click', function () { apply(mode() === 'dark' ? 'light' : 'dark'); });
+    }
+  })();
+
+  (function () {
+    var imgs = Array.prototype.slice.call(document.querySelectorAll('main img'));
+    if (!imgs.length) return;
+    var lb = document.getElementById('lightbox');
+    var lbImg = document.getElementById('lb-img');
+    var counter = document.getElementById('lb-counter');
+    var prevBtn = document.getElementById('lb-prev');
+    var nextBtn = document.getElementById('lb-next');
+    var current = [], idx = 0, touchX = null;
+
+    function groupFor(img) {
+      var g = img.closest('.gallery');
+      if (!g) return [img];
+      return Array.prototype.slice.call(g.querySelectorAll('img'));
+    }
+    function render() {
+      lbImg.src = current[idx].src;
+      lbImg.alt = current[idx].alt || '';
+      var multi = current.length > 1;
+      prevBtn.style.display = multi ? '' : 'none';
+      nextBtn.style.display = multi ? '' : 'none';
+      counter.textContent = multi ? (idx + 1) + ' / ' + current.length : '';
+    }
+    function open(list, i) {
+      current = list; idx = i; render();
+      lb.classList.add('open');
+      lb.setAttribute('aria-hidden', 'false');
+    }
+    function close() {
+      lb.classList.remove('open');
+      lb.setAttribute('aria-hidden', 'true');
+    }
+    function step(d) {
+      idx = (idx + d + current.length) % current.length; render();
+    }
+
+    imgs.forEach(function (img) {
+      img.setAttribute('tabindex', '0');
+      function openFor() {
+        var list = groupFor(img);
+        open(list, list.indexOf(img));
+      }
+      img.addEventListener('click', openFor);
+      img.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFor(); }
+      });
+    });
+    prevBtn.addEventListener('click', function (e) { e.stopPropagation(); step(-1); });
+    nextBtn.addEventListener('click', function (e) { e.stopPropagation(); step(1); });
+    document.getElementById('lb-close').addEventListener('click', close);
+    lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+    document.addEventListener('keydown', function (e) {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowLeft') step(-1);
+      else if (e.key === 'ArrowRight') step(1);
+    });
+    lb.addEventListener('touchstart', function (e) {
+      touchX = e.changedTouches[0].clientX;
+    }, { passive: true });
+    lb.addEventListener('touchend', function (e) {
+      if (touchX === null) return;
+      var dx = e.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  })();
+</script>
+</body>
+</html>
