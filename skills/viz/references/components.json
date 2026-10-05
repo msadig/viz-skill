@@ -653,7 +653,7 @@
       },
       "example_lines": [
         "<div class=\"card diagram\">",
-        "  <img src=\"../../diagrams/payments/match-flow.drawio.png\" alt=\"Every payment ends in one cash report.\">",
+        "  <img src=\"../diagrams/payments/match-flow.drawio.png\" alt=\"Every payment ends in one cash report.\">",
         "  <p class=\"cap\">Every payment ends in one cash report.</p>",
         "</div>"
       ],

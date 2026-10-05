@@ -5,7 +5,7 @@
   source material does not exist, swap any default for a better-fitting
   component from references/components.json), then splice it into the shell:
 
-    <skill>/scripts/build_report.py <your-fragment.html> docs/superpowers/reports/<date>-<topic>.html
+    <skill>/scripts/build_report.py <your-fragment.html> docs/reports/<date>-<topic>.html
 
   Everything else -- the design tokens, the kit CSS, the theme toggle, the
   lightbox -- lives in assets/template.html and is added by that
@@ -67,7 +67,7 @@
          labels of 5 words or fewer. Read the labels aloud - a story, not code.
          Build it first with scripts/diagram.py (see DIAGRAM.md), then embed the PNG:
     <div class="card diagram">
-      <img src="../../diagrams/{{topic}}/{{name}}.drawio.png" alt="{{caption}}">
+      <img src="../diagrams/{{topic}}/{{name}}.drawio.png" alt="{{caption}}">
       <p class="cap">{{caption: what the reader should take from this}}</p>
     </div>
     -->

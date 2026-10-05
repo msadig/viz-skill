@@ -10,11 +10,20 @@ Two modes. Both use one set of rules for pictures and one set of rules for words
 | Mode | Input | Output |
 |---|---|---|
 | `/viz diagram <topic> [what to draw]` | a description, code, or a doc | `docs/diagrams/<topic>/<name>.mmd` + `.drawio` + `.drawio.png` |
-| `/viz report [spec/plan path or topic]` | `docs/superpowers/specs\|plans/*.md` | `docs/superpowers/reports/<date>-<topic>.html` |
+| `/viz report [spec/plan path or topic]` | `docs/specs/*.md` + `docs/plans/*.md` | `docs/reports/<date>-<topic>.html` |
 
 No mode given? A request for one picture → diagram. A spec/plan → report.
 
 `<skill>` below means the directory of this SKILL.md (for Claude Code with a global install: `~/.claude/skills/viz`). The scripts are uv scripts, so run them directly. Run them from the project root, because they read `./.ste-allow.txt` and use `docs/diagrams` as the default directory.
+
+## Folders
+
+The defaults are `docs/diagrams/`, `docs/reports/`, `docs/specs/` and `docs/plans/`. Other folders override these defaults. The order is:
+1. The folders in the user's request ("put it in design/").
+2. The folders that the project's `CLAUDE.md` or `AGENTS.md` names for viz, for example: `viz: diagrams in design/diagrams, reports in design/reports, specs in rfcs/`.
+3. The defaults above.
+
+If the user wants different folders for all the work in a project, tell the user to add a line like the example in step 2 to `CLAUDE.md` or `AGENTS.md`. Every path in this skill shows the defaults. Use the resolved folders in their place. For `diagram.py status`, give the folder as an argument.
 
 ## Before you start
 

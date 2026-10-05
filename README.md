@@ -37,7 +37,7 @@ You must have Python 3.9 or more. The tools that follow make the result better. 
 
 ```
 /viz diagram payments  draw how a payment gets matched to an invoice
-/viz report docs/superpowers/specs/2026-09-19-my-feature-design.md
+/viz report docs/specs/2026-09-19-my-feature-design.md
 ```
 
 Diagrams go to `docs/diagrams/<topic>/`. The skill opens the PNG after it builds it. Say "do not open" to stop this.

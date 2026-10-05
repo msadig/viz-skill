@@ -6,8 +6,8 @@ Turns a spec/plan markdown pair into one self-contained HTML page (light/dark, o
 
 In this order:
 1. **Session context**: the spec/plan that this conversation wrote or discussed.
-2. **Argument**: a path → use it. A topic → glob `docs/superpowers/specs/*<arg>*.md` and `docs/superpowers/plans/*<arg>*.md`, and take the newest match.
-3. **Nothing found**: list the 10 newest files in specs/ and plans/ and ask the user which one.
+2. **Argument**: a path → use it. A topic → glob `docs/specs/*<arg>*.md` and `docs/plans/*<arg>*.md` (or the folders from SKILL.md "Folders"), and take the newest match. No match? Glob `docs/**/*<arg>*.md`.
+3. **Nothing found**: list the 10 newest markdown files in the spec and plan folders and ask the user which one.
 
 **Pair rule:** a spec and its plan share a `YYYY-MM-DD-<topic>` stem (the plan can drop `-design`). If there is no exact partner, glob the other folder by the topic words and take the newest match that fits. Read BOTH files. The spec gives the intent, scope and architecture. The plan gives the tasks, the order and the files that change. A spec alone is fine. Tell the user that there is no plan. Then the spec's own build order, phases and verify steps are the source for the breakdown and the "Complete when" lines. Remove the plan link from the header.
 
@@ -22,8 +22,8 @@ In this order:
 - Pick components from `references/components.json`. Its `select` index maps the *shape of the material* to a component. Copy the component's `example_lines`. Nothing fits? Build a custom component from `references/custom-components.md`. Never draw a diagram only because no component matched.
 
 ```bash
-<skill>/scripts/build_report.py <scratchpad>/report-body.html docs/superpowers/reports/<date>-<topic>.html
-<skill>/scripts/validate_report.py docs/superpowers/reports/<date>-<topic>.html
+<skill>/scripts/build_report.py <scratchpad>/report-body.html docs/reports/<date>-<topic>.html
+<skill>/scripts/validate_report.py docs/reports/<date>-<topic>.html
 ```
 
 **The output stem** is the plan's stem, else the spec stem without `-design`. The date comes from the stem, not from today.
@@ -39,10 +39,11 @@ A diagram that only repeats a list wastes the reader's first 10 seconds. Use the
 - **At most 1 diagram**: the big-picture one. It shows who starts the feature, what it becomes, and where it lands. Build it in diagram mode, in `docs/diagrams/<topic>/`. Then put it in the architecture section:
   ```html
   <div class="card diagram">
-    <img src="../../diagrams/<topic>/<name>.drawio.png" alt="<caption>">
+    <img src="../diagrams/<topic>/<name>.drawio.png" alt="<caption>">
     <p class="cap"><caption></p>
   </div>
   ```
+- All links and `src` paths are relative to the report file. With the default folders, a diagram is `../diagrams/...` and a spec is `../specs/...`. With other folders, calculate the relative path. The validator stops when a diagram PNG is not found.
 - A 2nd diagram needs a separate flow that branches. Say why in the summary, and validate with `--diagram-budget 2`. Zero diagrams is a good report.
 - A numbered task order is **not** a dependency graph. Draw an order as a graph only when the plan says that tasks fan out or join.
 
@@ -64,7 +65,7 @@ All sections are optional. **Delete a section that has no source material. Never
 
 **Identifiers have a home.** File names, classes and routes go in `<code>` in the breakdown cards and the file-touch map. They never go in the diagram. `<code>` content is exempt from STE.
 
-**Images in the source MDs:** keep them in their section. Rewrite `src` relative to `docs/superpowers/reports/`. Put consecutive images in 1 `<div class="gallery">`. The lightbox does the zoom.
+**Images in the source MDs:** keep them in their section. Rewrite `src` relative to the report folder. Put consecutive images in 1 `<div class="gallery">`. The lightbox does the zoom.
 
 ## 5. STE in the report
 
