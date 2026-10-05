@@ -45,6 +45,11 @@ A diagram that only repeats a list wastes the reader's first 10 seconds. Use the
   ```
 - All links and `src` paths are relative to the report file. With the default folders, a diagram is `../diagrams/...` and a spec is `../specs/...`. With other folders, calculate the relative path. The validator stops when a diagram PNG is not found.
 - A 2nd diagram needs a separate flow that branches. Say why in the summary, and validate with `--diagram-budget 2`. Zero diagrams is a good report.
+- **Build order = staircase (`.waterfall`), always.** It shows what waits for what, and what can run in parallel:
+  - A step 1 level deeper waits for the step above it.
+  - Steps in 1 `.wf-par` row can run at the same time. Use a `.wf-par` row only when the source says so ("together", "in parallel", "independent"), or when the plan gives the same single blocker for 2 tasks. Never guess parallel work. If the source says nothing, use 1 step per level.
+  - Status: `.good` = complete, `.warn` = started or blocked, no class = not started.
+  - Use `.rail` or `.chips` only for a flow that is not a build order (for example, the stages of a data flow).
 - A numbered task order is **not** a dependency graph. Draw an order as a graph only when the plan says that tasks fan out or join.
 
 ## 4. Sections
@@ -57,7 +62,7 @@ All sections are optional. **Delete a section that has no source material. Never
 | Summary / scope | goal + in-scope / out-of-scope lists | scope grid, `.tiles` |
 | Architecture and flow | only if the spec describes one | `.stack`, `.swim`, `.rail`, or the 1 diagram |
 | Phase / task breakdown | 1 card per phase. Add a "Complete when" line only when the source states a criterion | `.phase` cards, `.waterfall` |
-| Order and dependencies | only when the plan states real blockers | `.chips`, `.rail` |
+| Build order | the plan's task order, or the spec's phases / build order | `.waterfall` (the default, see below) |
 | Risks / open questions | stated risks, unknowns, open decisions | `.matrix`, `.callout` |
 | File-touch map | files by layer (Backend, Frontend, Migrations, Tests, Docs, Infra), only the layers that occur | `.layer-grid`, `.bars` |
 

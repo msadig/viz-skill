@@ -86,16 +86,22 @@
     </div>
   </section>
 
-  <!-- Dependencies: a plain numbered order is NOT a graph. Use .chips
-       or .rail unless tasks actually fan out / join. -->
-  <section id="dependencies">
-    <h2>Order &amp; Dependencies</h2>
+  <!-- Build order: the staircase is the DEFAULT. 1 level deeper = waits for
+       the step above. A .wf-par row = steps that can run at the same time
+       (only when the source says so). Status: .good complete, .warn started
+       or blocked, no class = not started. Not a graph. -->
+  <section id="order">
+    <h2>Build Order</h2>
     <div class="card">
-      <div class="chips">
-        <span class="chip accent">{{Task A}}</span>
-        <span class="arrow">→</span>
-        <span class="chip">{{Task B}}</span>
+      <div class="waterfall">
+        <div class="wf good" style="--d:0"><div class="t">{{Step 1}}</div><div class="d">{{what it gives the next step}}</div></div>
+        <div class="wf-par" style="--d:1">
+          <div class="wf"><div class="t">{{Step 2a}}</div><div class="d">{{why it can run with 2b}}</div></div>
+          <div class="wf"><div class="t">{{Step 2b}}</div><div class="d">{{...}}</div></div>
+        </div>
+        <div class="wf" style="--d:2"><div class="t">{{Step 3}}</div><div class="d">{{waits for 2a and 2b}}</div></div>
       </div>
+      <p class="cap">{{what the reader must take from the order}}</p>
     </div>
   </section>
 

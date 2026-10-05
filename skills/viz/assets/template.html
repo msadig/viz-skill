@@ -270,8 +270,21 @@
   .waterfall .wf.good { border-left-color: var(--green); }
   .waterfall .wf.warn { border-left-color: var(--amber); }
   .waterfall .wf.bad { border-left-color: var(--red); }
+  /* a parallel row: the steps in it can run at the same time.
+     The row takes the depth; its steps sit side by side. */
+  .waterfall .wf-par {
+    margin-left: calc(var(--d, 0) * 34px);
+    width: calc(100% - var(--d, 0) * 34px);
+    display: flex; flex-wrap: wrap; gap: 8px;
+    border: 1px dashed var(--border); border-radius: 12px; padding: 22px 8px 8px; position: relative;
+  }
+  .waterfall .wf-par::before {
+    content: "parallel"; position: absolute; top: 4px; left: 10px;
+    font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  }
+  .waterfall .wf-par > .wf { margin-left: 0; width: auto; flex: 1 1 200px; }
   @media (max-width: 640px) {
-    .waterfall .wf { margin-left: 0; width: 100%; }
+    .waterfall .wf, .waterfall .wf-par { margin-left: 0; width: 100%; }
   }
 
   /* bridge — finance-style waterfall bars (start, +/- deltas, end).

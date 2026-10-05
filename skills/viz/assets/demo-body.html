@@ -71,27 +71,27 @@
   </section>
 
   <section>
-    <h2>3 · Waterfall — staircase <span class="tag">.waterfall</span></h2>
+    <h2>3 · Waterfall — staircase <span class="tag accent">default for order</span> <span class="tag">.waterfall .wf-par</span></h2>
     <div class="card">
       <div class="waterfall">
-        <div class="wf" style="--d:0">
+        <div class="wf good" style="--d:0">
           <div class="t">Phase 1 — Provider adapters</div>
-          <div class="d">One class per bank, behind a shared interface.</div>
+          <div class="d">1 class for each bank, behind 1 interface.</div>
         </div>
-        <div class="wf good" style="--d:1">
-          <div class="t">Phase 2 — Watermark sync</div>
-          <div class="d">Possible only once adapters return a stable cursor.</div>
+        <div class="wf-par" style="--d:1">
+          <div class="wf warn"><div class="t">Phase 2 — Watermark sync</div><div class="d">Starts when the adapters operate.</div></div>
+          <div class="wf"><div class="t">Phase 3 — Admin screen</div><div class="d">Starts when the adapters operate.</div></div>
         </div>
-        <div class="wf warn" style="--d:2">
-          <div class="t">Phase 3 — Cash-flow view</div>
-          <div class="d">Reads synced rows; blocked until Phase 2 lands.</div>
+        <div class="wf" style="--d:2">
+          <div class="t">Phase 4 — Cash-flow view</div>
+          <div class="d">Starts when Phase 2 and Phase 3 are complete.</div>
         </div>
         <div class="wf bad" style="--d:3">
-          <div class="t">Phase 4 — Forecast</div>
-          <div class="d">Out of scope this cycle.</div>
+          <div class="t">Phase 5 — Forecast</div>
+          <div class="d">Not in scope for this cycle.</div>
         </div>
       </div>
-      <p class="cap">Each level is a consequence of the one above it.</p>
+      <p class="cap">1 level deeper = waits for the step above. A dashed row = steps that can run at the same time.</p>
     </div>
   </section>
 
