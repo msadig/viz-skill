@@ -6,7 +6,7 @@ An agent skill that makes diagrams and plan reports that a non-developer can rea
   - the `.mmd` is for agents,
   - the `.drawio` is for you (drag and drop in draw.io),
   - the `.drawio.png` is for PRs, docs and chat.
-- **Report mode** turns a spec/plan markdown into 1 HTML page (light and dark themes, offline, zero JS in the content) with at most 1 draw.io diagram.
+- **Report mode** turns a spec/plan markdown into 1 HTML page (light and dark themes, offline, zero JS in the content), a cascade build order, and at most 1 diagram drawn from its `.mmd`.
 - **All words obey ASD-STE100** Simplified Technical English. This includes labels, captions, report text and the agent's messages to you.
 
 ## Install
@@ -21,7 +21,7 @@ npx skills add msadig/viz-skill -g -a claude-code
 - `-a` selects the agent. Remove it to select agents from a list.
 - The repo is private. `skills` uses your Git credentials, the GitHub CLI (`gh auth login`), or SSH.
 
-Update: `npx skills update`. Remove: `npx skills remove viz`.
+Update: `npx skills update -g`. For a project install, remove `-g`. Remove: `npx skills remove viz`.
 
 ## Optional tools
 
