@@ -73,7 +73,7 @@
   <section>
     <h2>3 · Waterfall — staircase <span class="tag accent">default for order</span> <span class="tag">.waterfall .wf-par</span></h2>
     <div class="card">
-      <div class="waterfall">
+      <div class="waterfall" style="--levels:4">
         <div class="wf good" style="--d:0">
           <div class="t">Phase 1 — Provider adapters</div>
           <div class="d">1 class for each bank, behind 1 interface.</div>
@@ -91,7 +91,8 @@
           <div class="d">Not in scope for this cycle.</div>
         </div>
       </div>
-      <p class="cap">1 level deeper = waits for the step above. A dashed row = steps that can run at the same time.</p>
+      <p class="cap">1 column to the right = waits for the step above. A bracket = steps that can run at the same time.</p>
+      <div class="legend"><span><i class="sw good"></i>Complete</span><span><i class="sw warn"></i>Started</span><span><i class="sw muted"></i>Not started</span><span><i class="sw bad"></i>Out of scope</span></div>
     </div>
   </section>
 
@@ -316,6 +317,21 @@
       One diagram per report — the big-picture one, at product altitude
       (actors, outcomes; no class or file names, no &lt;br/&gt;, happy path only).
       A straight chain or fewer than four nodes is a step rail, not a flowchart.
+    </div>
+  </section>
+
+  <section>
+    <h2>13b · Inline graph from a .mmd <span class="tag accent">follows the theme</span> <span class="tag">pre.mmd</span></h2>
+    <div class="card diagram">
+<pre class="mmd">%% caption: Each payment ends in 1 cash report.
+flowchart LR
+  A["Cashier records sale"] --&gt; B{"Payment matches invoice?"}
+  B -- "yes" --&gt; C["Invoice closes"]
+  B -- "no" --&gt; D["Person examines payment"]
+  D --&gt; C
+  C --&gt; E["Cash report"]
+  E -.-&gt;|"next day"| A</pre>
+      <p class="cap">The template script draws the .mmd as a graph in the page colours. A blue edge = start, a green edge = end. Without JS, the .mmd text shows.</p>
     </div>
   </section>
 

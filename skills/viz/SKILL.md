@@ -1,6 +1,6 @@
 ---
 name: viz
-description: Makes diagrams and plan reports that a non-developer can read. Diagram mode writes a Mermaid .mmd, converts it to an editable .drawio, and exports a .drawio.png for PRs and docs, keeping all three files. Report mode turns a spec/plan markdown into a light/dark HTML page built from zero-JS components with at most one draw.io diagram. All labels, captions and prose obey ASD-STE100 Simplified Technical English. Use when the user says "viz", "/viz", "visualize", "diagram this", "draw the flow", "make a .drawio", "PNG for the PR", "visualize the plan", "plan report", or asks for an .mmd → .drawio → .png diagram.
+description: Makes diagrams and plan reports that a non-developer can read. Diagram mode writes a Mermaid .mmd, converts it to an editable .drawio, and exports a .drawio.png for PRs and docs, keeping all three files. Report mode turns a spec/plan markdown into a light/dark HTML page built from zero-JS components, a cascade build order, and at most one diagram drawn inline from its .mmd. All labels, captions and prose obey ASD-STE100 Simplified Technical English. Use when the user says "viz", "/viz", "visualize", "diagram this", "draw the flow", "make a .drawio", "PNG for the PR", "visualize the plan", "plan report", or asks for an .mmd → .drawio → .png diagram.
 ---
 
 # viz
@@ -51,7 +51,7 @@ mkdir -p docs/diagrams/payments
 Read [REPORT.md](REPORT.md) before you build a report. In short:
 1. Read the spec AND the plan.
 2. Write a body fragment from `references/body-skeleton.html`. Use components from `references/components.json`.
-3. Build the one big-picture diagram (if one earns its place) in diagram mode, then embed its PNG.
+3. Build the one big-picture diagram (if one earns its place) in diagram mode, then draw it inline with `<pre class="mmd" data-src="...">` (or embed its PNG after a hand edit).
 4. Run `scripts/build_report.py <fragment> <out.html>`, then `scripts/validate_report.py <out.html>`.
 5. Open the page.
 
@@ -89,7 +89,7 @@ Write this message in STE. Give the user the absolute path(s) in a fenced block 
 | [STE.md](STE.md) | ASD-STE100 rules to obey while you write |
 | `scripts/doctor.py` | checks the optional tools, suggests installs (plain python3) |
 | `scripts/diagram.py` | lint / build / export / status |
-| `scripts/build_report.py`, `scripts/validate_report.py` | report splice and checks |
+| `scripts/build_report.py`, `scripts/validate_report.py` | report splice (copies `.mmd` text in) and checks |
 | `scripts/ste_check.py` | STE checker (`--strict`, `--allow FILE`) |
 | `references/` | component catalog, body skeleton, STE rules, word list, substitutions, technical words |
-| `assets/` | `template.html` (never read it), `components-demo.html` (every component, both themes) |
+| `assets/` | `template.html` (never read it; holds the kit CSS and the `.mmd` graph script), `components-demo.html` (every component, both themes; rebuild it from `demo-body.html`) |

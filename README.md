@@ -53,7 +53,7 @@ If you edit a `.drawio` by hand, the `.drawio` becomes the source of truth. The 
 /viz made this diagram. Its 3 files are in `docs/diagrams/viz/`.
 
 - **Diagram.** The agent writes a Mermaid file. A script changes the Mermaid file into a draw.io file, and then into a PNG. The 3 files stay together.
-- **Report.** The agent reads the spec and the plan. Then it writes 1 HTML file. The HTML file can show 1 diagram as a PNG.
+- **Report.** The agent reads the spec and the plan. Then it writes 1 HTML file. The build order shows as a cascade. The HTML file can show 1 diagram. The page draws it from the Mermaid file in the page colours.
 - **Your changes.** You can change the draw.io file in draw.io. After that, the agent uses the draw.io file and not the Mermaid file. The agent does not write over your changes.
 - **Language.** All the information in diagrams and reports, and in the agent output, obeys Simplified Technical English (ASD-STE100). A script finds each item that is not approved.
 

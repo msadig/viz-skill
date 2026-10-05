@@ -15,6 +15,7 @@ fragment: a bare fragment has no <style>, so the CSS checks would misfire.
 """
 
 import argparse
+import html
 import re
 import sys
 from pathlib import Path
@@ -61,6 +62,15 @@ def main():
 
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
+
+    # <pre class="mmd" data-src="../diagrams/x/y.mmd"></pre>: copy the .mmd text in,
+    # so the .mmd stays the one source. The path is relative to the report.
+    def inline_mmd(m):
+        src = out.parent / m.group(2)
+        if not src.exists():
+            sys.exit(f"mmd graph not found (relative to the report): {m.group(2)}")
+        return f"{m.group(1)}>{html.escape(src.read_text(encoding='utf-8').strip())}</pre>"
+    fragment = re.sub(r'(<pre class="mmd"[^>]*?data-src="([^"]+)"[^>]*)>\s*</pre>', inline_mmd, fragment)
     report = f"{head}\n{fragment}\n{tail}"
     out.write_text(report, encoding="utf-8")
 

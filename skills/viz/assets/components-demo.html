@@ -87,11 +87,20 @@
       radial-gradient(55vw 55vw at 50% 108%, var(--blob-3), transparent 60%);
   }
   main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
-  h1 { font-size: 28px; margin: 0 0 4px; }
+  h1 { font-size: 30px; line-height: 1.2; letter-spacing: -.015em; margin: 0 0 6px; }
+  /* section heading: dark text, a short accent bar in front, a hairline after */
   h2 {
-    font-size: 20px; margin: 40px 0 16px; padding-bottom: 8px;
-    border-bottom: 1px solid var(--border); color: var(--accent);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+    font-size: 19px; letter-spacing: -.01em; margin: 44px 0 14px;
   }
+  h2::before {
+    content: ""; width: 4px; height: 18px; border-radius: 2px; background: var(--accent);
+  }
+  h2::after { content: ""; flex: 1 1 40px; height: 1px; background: var(--border); }
+  h2 .tag { margin-left: 0; }
+  /* prose stays at a length the eye can follow */
+  section > p, .card > p:not(.cap), .callout, .scope-goal { max-width: 75ch; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
   h3 { font-size: 16px; margin: 0 0 8px; }
   a { color: var(--accent); text-decoration: none; }
   a:hover { text-decoration: underline; }
@@ -256,35 +265,71 @@
     .rail .step::after { content: none; }
   }
 
-  /* waterfall (staircase) — phases descending, each indented by --d */
-  .waterfall { display: flex; flex-direction: column; gap: 8px; }
-  .waterfall .wf {
-    margin-left: calc(var(--d, 0) * 34px);
-    width: calc(100% - var(--d, 0) * 34px);
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-left: 3px solid var(--accent); border-radius: 10px;
-    padding: 11px 14px;
+  /* waterfall — the build order as a cascade. Every row is a bar of the
+     same width; each level of --d moves it 1 column to the right, so the
+     eye reads "down and right = later". An elbow arrow joins each row to
+     the row above it. --levels = deepest --d + 1 (set it on .waterfall).
+     A .wf-par is 1 row of steps that run at the same time: its bars stack
+     in the same column, joined by a bracket. */
+  .waterfall {
+    --levels: 4; --wf-bar: 56; --wf-x: 18px;
+    --wf-step: calc((100% - var(--wf-bar) * 1%) / max(var(--levels) - 1, 1));
+    --wf-step-cq: calc((100cqi - var(--wf-bar) * 1cqi) / max(var(--levels) - 1, 1));
+    container-type: inline-size;
+    display: flex; flex-direction: column; gap: 18px; padding: 4px 0;
+    background-image: repeating-linear-gradient(to right,
+      var(--border) 0 1px, transparent 1px var(--wf-step));
+    background-position: var(--wf-x) 0;
   }
-  .waterfall .wf .t { font-weight: 600; }
-  .waterfall .wf .d { color: var(--muted); font-size: 13px; }
+  .waterfall > .wf, .waterfall > .wf-par {
+    position: relative;
+    margin-left: calc(var(--d, 0) * var(--wf-step));
+    width: calc(var(--wf-bar) * 1%);
+  }
+  .waterfall .wf {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-left: 4px solid var(--muted); border-radius: 10px;
+    padding: 9px 14px 10px; box-shadow: var(--shadow);
+  }
+  .waterfall .wf .t { font-weight: 600; line-height: 1.35; }
+  .waterfall .wf .d { color: var(--muted); font-size: 13px; line-height: 1.45; }
   .waterfall .wf.good { border-left-color: var(--green); }
   .waterfall .wf.warn { border-left-color: var(--amber); }
   .waterfall .wf.bad { border-left-color: var(--red); }
-  /* a parallel row: the steps in it can run at the same time.
-     The row takes the depth; its steps sit side by side. */
-  .waterfall .wf-par {
-    margin-left: calc(var(--d, 0) * 34px);
-    width: calc(100% - var(--d, 0) * 34px);
-    display: flex; flex-wrap: wrap; gap: 8px;
-    border: 1px dashed var(--border); border-radius: 12px; padding: 22px 8px 8px; position: relative;
+  /* elbow: down from the bar above (at --wf-x inside it), right into this row */
+  .waterfall > [style*="--d"]:not(:first-child)::before {
+    content: ""; position: absolute; pointer-events: none;
+    left: calc(var(--wf-x) - var(--wf-step-cq)); top: -19px;
+    width: calc(var(--wf-step-cq) - var(--wf-x) - 7px); height: 40px;
+    border-left: 2px solid var(--d-line); border-bottom: 2px solid var(--d-line);
+    border-bottom-left-radius: 10px;
   }
-  .waterfall .wf-par::before {
-    content: "parallel"; position: absolute; top: 4px; left: 10px;
+  .waterfall > [style*="--d"]:not(:first-child)::after {
+    content: ""; position: absolute; left: -8px; top: 15px; pointer-events: none;
+    border: 6px solid transparent; border-left: 8px solid var(--d-line); border-right: 0;
+  }
+  .waterfall > [style*="--d:0"]::before, .waterfall > [style*="--d:0"]::after,
+  .waterfall > [style*="--d: 0"]::before, .waterfall > [style*="--d: 0"]::after { content: none; }
+  /* parallel row: a bracket on the left, the bars stacked in 1 column */
+  .waterfall .wf-par {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 20px 0 0 12px; border-left: 2px dashed var(--d-line);
+    border-radius: 0 0 0 10px;
+  }
+  .waterfall > .wf-par[style*="--d"]:not(:first-child)::before { height: 59px; }
+  .waterfall > .wf-par[style*="--d"]:not(:first-child)::after { top: 34px; }
+  .waterfall .wf-par > .wf { margin: 0; width: 100%; }
+  .waterfall .wf-par > :first-child::before {
+    content: "same time"; position: absolute; top: 2px; left: 14px;
     font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
   }
-  .waterfall .wf-par > .wf { margin-left: 0; width: auto; flex: 1 1 200px; }
   @media (max-width: 640px) {
-    .waterfall .wf, .waterfall .wf-par { margin-left: 0; width: 100%; }
+    .waterfall { --wf-bar: 100; --wf-x: 8px; background-image: none; gap: 12px; }
+    .waterfall > .wf, .waterfall > .wf-par {
+      margin-left: calc(var(--d, 0) * 14px); width: calc(100% - var(--d, 0) * 14px);
+    }
+    .waterfall > [style*="--d"]:not(:first-child)::before,
+    .waterfall > [style*="--d"]:not(:first-child)::after { content: none; }
   }
 
   /* bridge — finance-style waterfall bars (start, +/- deltas, end).
@@ -498,6 +543,27 @@
   .legend .sw.bad { background: var(--red); }
   .legend .sw.muted { background: var(--muted); }
 
+  /* mmd graph — a .mmd flowchart drawn as inline SVG by the template's
+     script, in the page's own tokens (so it follows the theme). Without
+     JS the <pre> shows the .mmd text. Start nodes get the accent edge,
+     end nodes the green edge: who starts it, where it lands. */
+  pre.mmd {
+    margin: 0; padding: 12px 14px; overflow-x: auto; font-size: 12.5px;
+    background: var(--surface-2); border: 1px dashed var(--border); border-radius: 10px;
+  }
+  .mmd-svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  .mmd-svg .nd { fill: var(--d-node); stroke: var(--d-border); stroke-width: 1.5; }
+  .mmd-svg .nd.q { fill: var(--d-node-2); }
+  .mmd-svg .nd.start { stroke: var(--accent); stroke-width: 2; }
+  .mmd-svg .nd.end { stroke: var(--green); stroke-width: 2; }
+  .mmd-svg .nt { fill: var(--text); font-size: 13.5px; font-weight: 600; }
+  .mmd-svg .eg { fill: none; stroke: var(--d-line); stroke-width: 1.6; }
+  .mmd-svg .eg.dash { stroke-dasharray: 5 4; }
+  .mmd-svg .eg.back { stroke-dasharray: 2 4; }
+  .mmd-svg .ah { fill: var(--d-line); }
+  .mmd-svg .el { fill: var(--bg); stroke: var(--d-border); }
+  .mmd-svg .et { fill: var(--muted); font-size: 12px; }
+
   main img { max-width: 100%; border-radius: 8px; cursor: zoom-in; }
   .gallery { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
   .gallery img { height: 160px; width: auto; flex: 0 0 auto; }
@@ -611,7 +677,7 @@
   <section>
     <h2>3 · Waterfall — staircase <span class="tag accent">default for order</span> <span class="tag">.waterfall .wf-par</span></h2>
     <div class="card">
-      <div class="waterfall">
+      <div class="waterfall" style="--levels:4">
         <div class="wf good" style="--d:0">
           <div class="t">Phase 1 — Provider adapters</div>
           <div class="d">1 class for each bank, behind 1 interface.</div>
@@ -629,7 +695,8 @@
           <div class="d">Not in scope for this cycle.</div>
         </div>
       </div>
-      <p class="cap">1 level deeper = waits for the step above. A dashed row = steps that can run at the same time.</p>
+      <p class="cap">1 column to the right = waits for the step above. A bracket = steps that can run at the same time.</p>
+      <div class="legend"><span><i class="sw good"></i>Complete</span><span><i class="sw warn"></i>Started</span><span><i class="sw muted"></i>Not started</span><span><i class="sw bad"></i>Out of scope</span></div>
     </div>
   </section>
 
@@ -858,6 +925,21 @@
   </section>
 
   <section>
+    <h2>13b · Inline graph from a .mmd <span class="tag accent">follows the theme</span> <span class="tag">pre.mmd</span></h2>
+    <div class="card diagram">
+<pre class="mmd">%% caption: Each payment ends in 1 cash report.
+flowchart LR
+  A["Cashier records sale"] --&gt; B{"Payment matches invoice?"}
+  B -- "yes" --&gt; C["Invoice closes"]
+  B -- "no" --&gt; D["Person examines payment"]
+  D --&gt; C
+  C --&gt; E["Cash report"]
+  E -.-&gt;|"next day"| A</pre>
+      <p class="cap">The template script draws the .mmd as a graph in the page colours. A blue edge = start, a green edge = end. Without JS, the .mmd text shows.</p>
+    </div>
+  </section>
+
+  <section>
     <h2>14 · Primitives → custom builds <span class="tag accent">.box .grid .kv .split</span></h2>
 
     <div class="card">
@@ -1055,6 +1137,257 @@
       touchX = null;
       if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
     }, { passive: true });
+  })();
+
+  /* .mmd graphs: <pre class="mmd"> holds Mermaid flowchart text (build_report.py
+     inlines it from data-src). Draw it as SVG with tokens; leave the <pre> for
+     any other Mermaid type. Layout: ranks by longest path (cycles broken by DFS),
+     order in a rank by barycenter sweeps, then pull each node toward its parents.
+     ponytail: tuned for the 8-node, 1-line-label diagrams viz allows; a big graph
+     gets crossings, use the draw.io PNG for that. */
+  (function () {
+    var NS = 'http://www.w3.org/2000/svg';
+    var SHAPES = [['((', '))', 'circle'], ['([', '])', 'pill'], ['[[', ']]', 'box'], ['[(', ')]', 'box'],
+      ['{' + '{', '}' + '}', 'hex'], ['[', ']', 'box'], ['(', ')', 'round'], ['{', '}', 'q'], ['>', ']', 'box']];
+    var EDGE = /\s*(?:--\s*"([^"]*)"\s*(-->|---)|-\.\s*"?([^".]*?)"?\s*\.->|--\s+([^"|>-][^>]*?)\s+(-->|---)|(-->|---|-\.->|==>|--[ox])(?:\|"?([^|"]*)"?\|)?)\s*/g;
+    var measure = document.createElement('canvas').getContext('2d');
+
+    function parse(src) {
+      var lines = src.split('\n').map(function (l) { return l.trim(); })
+        .filter(function (l) { return l && l.slice(0, 2) !== '%%'; });
+      var head = /^(?:flowchart|graph)\s+(TD|TB|LR|RL|BT)\b/i.exec(lines[0] || '');
+      if (!head) return null;
+      var g = { dir: head[1].toUpperCase(), nodes: {}, order: [], edges: [] };
+      function node(tok) {
+        tok = tok.replace(/:::\w+$/, '').trim();
+        var m = /^([\w-]+)\s*(.*)$/.exec(tok);
+        if (!m) return null;
+        var id = m[1], rest = m[2], n = g.nodes[id];
+        if (!n) { n = g.nodes[id] = { id: id, label: id, shape: 'box' }; g.order.push(id); }
+        for (var i = 0; rest && i < SHAPES.length; i++) {
+          var s = SHAPES[i];
+          if (rest.indexOf(s[0]) === 0 && rest.slice(-s[1].length) === s[1]) {
+            n.label = rest.slice(s[0].length, rest.length - s[1].length).trim().replace(/^"|"$/g, '');
+            n.shape = s[2];
+            break;
+          }
+        }
+        return id;
+      }
+      lines.slice(1).forEach(function (l) {
+        if (/^(classDef|class|style|linkStyle|click|subgraph|end|direction)\b/.test(l)) return;
+        var parts = [], m, last = 0;
+        EDGE.lastIndex = 0;
+        while ((m = EDGE.exec(l))) {
+          parts.push(l.slice(last, m.index));
+          parts.push({ label: m[1] || m[3] || m[4] || m[7] || '', dash: /\./.test(m[0]) });
+          last = EDGE.lastIndex;
+        }
+        parts.push(l.slice(last));
+        var prev = null;
+        parts.forEach(function (p) {
+          if (typeof p === 'string') {
+            var ids = p.split('&').map(node).filter(Boolean);
+            if (prev) prev.from.forEach(function (a) { ids.forEach(function (b) {
+              g.edges.push({ a: a, b: b, label: prev.e.label, dash: prev.e.dash });
+            }); });
+            prev = { from: ids };
+          } else if (prev) prev.e = p;
+        });
+      });
+      return g;
+    }
+
+    function layout(g) {
+      var ids = g.order, out = {}, inn = {}, rank = {}, state = {};
+      ids.forEach(function (id) { out[id] = []; inn[id] = []; });
+      // break cycles: an edge back to a node on the DFS stack is drawn as a return arc
+      function dfs(id) {
+        state[id] = 1;
+        g.edges.forEach(function (e) {
+          if (e.a !== id) return;
+          if (state[e.b] === 1) e.back = true;
+          else if (!state[e.b]) dfs(e.b);
+        });
+        state[id] = 2;
+      }
+      ids.forEach(function (id) { if (!state[id]) dfs(id); });
+      var changed = true;
+      ids.forEach(function (id) { rank[id] = 0; });
+      while (changed) {
+        changed = false;
+        g.edges.forEach(function (e) {
+          if (!e.back && e.a !== e.b && rank[e.b] < rank[e.a] + 1) { rank[e.b] = rank[e.a] + 1; changed = true; }
+        });
+      }
+      // an edge that skips ranks gets 1 waypoint per skipped rank, so the
+      // ordering keeps it clear of the nodes in those ranks
+      var all = ids.slice();
+      g.edges.forEach(function (e, i) {
+        if (e.back || e.a === e.b) return;
+        e.via = [];
+        var prev = e.a;
+        for (var r = rank[e.a] + 1; r < rank[e.b]; r++) {
+          var w = '~' + i + '-' + r;
+          g.nodes[w] = { id: w, way: true }; rank[w] = r; out[w] = []; inn[w] = [];
+          all.push(w); e.via.push(w);
+          out[prev].push(w); inn[w].push(prev); prev = w;
+        }
+        out[prev].push(e.b); inn[e.b].push(prev);
+      });
+      var ranks = [];
+      all.forEach(function (id) { (ranks[rank[id]] = ranks[rank[id]] || []).push(id); });
+      var pos = {};
+      function index() { ranks.forEach(function (r) { r.forEach(function (id, i) { pos[id] = i; }); }); }
+      function bary(r, nb) {
+        var v = {};
+        r.forEach(function (id) {
+          var ns = nb[id];
+          v[id] = ns.length ? ns.reduce(function (s, n) { return s + pos[n]; }, 0) / ns.length : pos[id];
+        });
+        r.sort(function (x, y) { return v[x] - v[y]; });
+      }
+      index();
+      for (var k = 0; k < 4; k++) {
+        for (var i = 1; i < ranks.length; i++) { bary(ranks[i], inn); index(); }
+        for (i = ranks.length - 2; i >= 0; i--) { bary(ranks[i], out); index(); }
+      }
+
+      var horiz = g.dir === 'LR' || g.dir === 'RL';
+      all.forEach(function (id) {
+        var n = g.nodes[id];
+        if (n.way) { n.w = n.h = n.along = 0; n.across = 12; return; }
+        var w = measure.measureText(n.label).width;
+        n.w = Math.max(w + (n.shape === 'q' ? 64 : n.shape === 'hex' ? 48 : 32), 96);
+        n.h = n.shape === 'q' ? 60 : 42;
+        if (n.shape === 'circle') { n.w = Math.max(n.w, 70); n.h = n.w; }
+        n.along = horiz ? n.w : n.h; n.across = horiz ? n.h : n.w;
+      });
+      var GAP = horiz ? 28 : 36, RGAP = horiz ? 84 : 66, c = {};
+      // across positions: start packed, pull toward parents, then push apart
+      ranks.forEach(function (r, ri) {
+        var x = 0;
+        r.forEach(function (id) { var n = g.nodes[id]; c[id] = x + n.across / 2; x += n.across + GAP; });
+        if (ri === 0) return;
+        r.forEach(function (id) {
+          if (inn[id].length) c[id] = inn[id].reduce(function (s, p) { return s + c[p]; }, 0) / inn[id].length;
+        });
+        for (var i = 1; i < r.length; i++) {
+          var a = g.nodes[r[i - 1]], b = g.nodes[r[i]], min = c[a.id] + a.across / 2 + GAP + b.across / 2;
+          if (c[b.id] < min) c[b.id] = min;
+        }
+      });
+      var lo = Infinity, hi = -Infinity;
+      all.forEach(function (id) { var n = g.nodes[id]; lo = Math.min(lo, c[id] - n.across / 2); hi = Math.max(hi, c[id] + n.across / 2); });
+      var a = 0, PAD = 24, hasBack = g.edges.some(function (e) { return e.back; });
+      ranks.forEach(function (r) {
+        var size = Math.max.apply(null, r.map(function (id) { return g.nodes[id].along; }));
+        r.forEach(function (id) {
+          var n = g.nodes[id], ac = c[id] - lo + PAD, al = a + size / 2 + PAD;
+          n.x = horiz ? al : ac; n.y = horiz ? ac : al;
+        });
+        a += size + RGAP;
+      });
+      var W = (horiz ? a - RGAP : hi - lo) + PAD * 2, H = (horiz ? hi - lo : a - RGAP) + PAD * 2;
+      if (hasBack) { if (horiz) H += 48; else W += 64; }
+      if (g.dir === 'RL' || g.dir === 'BT') all.forEach(function (id) {
+        var n = g.nodes[id]; if (horiz) n.x = W - n.x; else n.y = H - n.y;
+      });
+      g.W = W; g.H = H; g.horiz = horiz; g.inn = inn; g.out = out; g.ranks = ranks;
+    }
+
+    function el(tag, attrs, parent) {
+      var e = document.createElementNS(NS, tag);
+      for (var k in attrs) e.setAttribute(k, attrs[k]);
+      if (parent) parent.appendChild(e);
+      return e;
+    }
+
+    // the point where a ray from the node centre toward (tx, ty) leaves its shape
+    function port(n, tx, ty) {
+      var dx = tx - n.x, dy = ty - n.y;
+      if (!dx && !dy) return [n.x, n.y];
+      var hw = n.w / 2, hh = n.h / 2, t;
+      if (n.shape === 'q') t = 1 / (Math.abs(dx) / hw + Math.abs(dy) / hh);
+      else if (n.shape === 'circle') t = hw / Math.sqrt(dx * dx + dy * dy);
+      else t = Math.min(dx ? hw / Math.abs(dx) : Infinity, dy ? hh / Math.abs(dy) : Infinity);
+      return [n.x + dx * t, n.y + dy * t];
+    }
+
+    function draw(g, title) {
+      var svg = el('svg', { viewBox: '0 0 ' + g.W + ' ' + g.H, width: g.W, class: 'mmd-svg', role: 'img' });
+      if (title) el('title', {}, svg).textContent = title;
+      var defs = el('defs', {}, svg), mk = el('marker', { id: 'mmd-ah', viewBox: '0 0 10 10', refX: 9, refY: 5,
+        markerWidth: 8, markerHeight: 8, orient: 'auto-start-reverse' }, defs);
+      el('path', { d: 'M0,0 L10,5 L0,10 z', class: 'ah' }, mk);
+      var edges = el('g', {}, svg), labels = el('g', {}, svg), nodes = el('g', {}, svg);
+
+      g.edges.forEach(function (e) {
+        var A = g.nodes[e.a], B = g.nodes[e.b], d, mid;
+        if (e.back || e.a === e.b) {
+          // return arc around the outside edge of the graph
+          var p = g.horiz ? [A.x, A.y + A.h / 2] : [A.x + A.w / 2, A.y];
+          var q = g.horiz ? [B.x, B.y + B.h / 2] : [B.x + B.w / 2, B.y];
+          var far = g.horiz ? g.H - 10 : g.W - 12;
+          d = g.horiz
+            ? 'M' + p + ' C' + [p[0], far] + ' ' + [q[0], far] + ' ' + q
+            : 'M' + p + ' C' + [far, p[1]] + ' ' + [far, q[1]] + ' ' + q;
+          mid = g.horiz ? [(p[0] + q[0]) / 2, far - 18] : [far - 22, (p[1] + q[1]) / 2];
+        } else {
+          var s = g.horiz ? [A.x + A.w / 2, A.y] : [A.x, A.y + A.h / 2];
+          var t = g.horiz ? [B.x - B.w / 2, B.y] : [B.x, B.y - B.h / 2];
+          if (g.dir === 'RL') { s[0] = A.x - A.w / 2; t[0] = B.x + B.w / 2; }
+          if (g.dir === 'BT') { s[1] = A.y - A.h / 2; t[1] = B.y + B.h / 2; }
+          if (A.shape === 'q' || A.shape === 'circle') s = port(A, t[0], t[1]);
+          if (B.shape === 'q' || B.shape === 'circle') t = port(B, s[0], s[1]);
+          var pts = [s].concat(e.via.map(function (w) { return [g.nodes[w].x, g.nodes[w].y]; }), [t]);
+          if (pts.length > 2 && (A.shape === 'q' || A.shape === 'circle')) pts[0] = port(A, pts[1][0], pts[1][1]);
+          if (pts.length > 2 && (B.shape === 'q' || B.shape === 'circle')) pts[pts.length - 1] = port(B, pts[pts.length - 2][0], pts[pts.length - 2][1]);
+          d = 'M' + pts[0];
+          var half = Math.floor((pts.length - 1) / 2);
+          for (var i = 0; i < pts.length - 1; i++) {
+            var p0 = pts[i], p1 = pts[i + 1];
+            var k = g.horiz ? (p1[0] - p0[0]) / 2 : (p1[1] - p0[1]) / 2;
+            var c1 = g.horiz ? [p0[0] + k, p0[1]] : [p0[0], p0[1] + k], c2 = g.horiz ? [p1[0] - k, p1[1]] : [p1[0], p1[1] - k];
+            d += ' C' + c1 + ' ' + c2 + ' ' + p1;
+            if (i === half) mid = [(p0[0] + 3 * c1[0] + 3 * c2[0] + p1[0]) / 8, (p0[1] + 3 * c1[1] + 3 * c2[1] + p1[1]) / 8];
+          }
+        }
+        el('path', { d: d, class: 'eg' + (e.dash ? ' dash' : '') + (e.back ? ' back' : ''), 'marker-end': 'url(#mmd-ah)' }, edges);
+        if (e.label) {
+          var w = measure.measureText(e.label).width * 12 / 13.5 + 16;
+          el('rect', { x: mid[0] - w / 2, y: mid[1] - 11, width: w, height: 22, rx: 11, class: 'el' }, labels);
+          el('text', { x: mid[0], y: mid[1] + 4, 'text-anchor': 'middle', class: 'et' }, labels).textContent = e.label;
+        }
+      });
+
+      g.order.forEach(function (id) {
+        var n = g.nodes[id], x = n.x - n.w / 2, y = n.y - n.h / 2, shape;
+        var cls = 'nd' + (n.shape === 'q' ? ' q' : '') +
+          (!g.inn[id].length ? ' start' : !g.out[id].length ? ' end' : '');
+        if (n.shape === 'q') shape = el('path', { d: 'M' + [n.x, y] + ' L' + [x + n.w, n.y] + ' L' + [n.x, y + n.h] + ' L' + [x, n.y] + 'z' }, nodes);
+        else if (n.shape === 'circle') shape = el('circle', { cx: n.x, cy: n.y, r: n.w / 2 }, nodes);
+        else if (n.shape === 'hex') shape = el('path', { d: 'M' + [x + 14, y] + ' H' + (x + n.w - 14) + ' L' + [x + n.w, n.y] + ' L' + [x + n.w - 14, y + n.h] + ' H' + (x + 14) + ' L' + [x, n.y] + 'z' }, nodes);
+        else shape = el('rect', { x: x, y: y, width: n.w, height: n.h, rx: n.shape === 'pill' ? n.h / 2 : n.shape === 'round' ? 14 : 8 }, nodes);
+        shape.setAttribute('class', cls);
+        el('text', { x: n.x, y: n.y + 5, 'text-anchor': 'middle', class: 'nt' }, nodes).textContent = n.label;
+      });
+      return svg;
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll('main pre.mmd'), function (pre) {
+      var src = pre.textContent, g = parse(src);
+      if (!g || !g.order.length) return;
+      var font = getComputedStyle(document.body).fontFamily;
+      measure.font = '600 13.5px ' + font;
+      layout(g);
+      var cap = /^%%\s*caption:\s*(.+)$/m.exec(src), card = pre.closest('.card');
+      var capEl = card && card.querySelector('.cap');
+      var svg = draw(g, cap ? cap[1] : capEl ? capEl.textContent : '');
+      svg.setAttribute('style', 'font-family:' + font);
+      pre.hidden = true;
+      pre.parentNode.insertBefore(svg, pre);
+    });
   })();
 </script>
 </body>

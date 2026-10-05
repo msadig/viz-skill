@@ -65,11 +65,14 @@
          outcomes in plain words. No class/file/route/table names, no <br/>,
          no error or rollback edges (those go in a .callout), max 8 nodes,
          labels of 5 words or fewer. Read the labels aloud - a story, not code.
-         Build it first with scripts/diagram.py (see DIAGRAM.md), then embed the PNG:
+         Build it first with scripts/diagram.py (see DIAGRAM.md), then draw the
+         .mmd in the page (it follows the theme; build_report.py copies it in):
     <div class="card diagram">
-      <img src="../diagrams/{{topic}}/{{name}}.drawio.png" alt="{{caption}}">
+      <pre class="mmd" data-src="../diagrams/{{topic}}/{{name}}.mmd"></pre>
       <p class="cap">{{caption: what the reader should take from this}}</p>
     </div>
+         If diagram.py status says hand-edited, embed the PNG in place of the <pre>:
+      <img src="../diagrams/{{topic}}/{{name}}.drawio.png" alt="{{caption}}">
     -->
   </section>
 
@@ -86,14 +89,14 @@
     </div>
   </section>
 
-  <!-- Build order: the staircase is the DEFAULT. 1 level deeper = waits for
-       the step above. A .wf-par row = steps that can run at the same time
-       (only when the source says so). Status: .good complete, .warn started
-       or blocked, no class = not started. Not a graph. -->
+  <!-- Build order: the cascade is the DEFAULT. 1 column to the right = waits
+       for the step above. A .wf-par row = steps that can run at the same time
+       (only when the source says so). --levels = deepest --d + 1. Status:
+       .good complete, .warn started or blocked, no class = not started. -->
   <section id="order">
     <h2>Build Order</h2>
     <div class="card">
-      <div class="waterfall">
+      <div class="waterfall" style="--levels:3">
         <div class="wf good" style="--d:0"><div class="t">{{Step 1}}</div><div class="d">{{what it gives the next step}}</div></div>
         <div class="wf-par" style="--d:1">
           <div class="wf"><div class="t">{{Step 2a}}</div><div class="d">{{why it can run with 2b}}</div></div>
@@ -102,6 +105,7 @@
         <div class="wf" style="--d:2"><div class="t">{{Step 3}}</div><div class="d">{{waits for 2a and 2b}}</div></div>
       </div>
       <p class="cap">{{what the reader must take from the order}}</p>
+      <div class="legend"><span><i class="sw good"></i>Complete</span><span><i class="sw warn"></i>Started</span><span><i class="sw muted"></i>Not started</span></div>
     </div>
   </section>
 

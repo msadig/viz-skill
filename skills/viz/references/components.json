@@ -6,11 +6,11 @@
     "authoring": "You write ONLY the body fragment — the <section> markup, shaped like references/body-skeleton.html. scripts/build_report.py splices it into assets/template.html. Never read or copy the template: ~25k chars of tokens, kit CSS and theme/lightbox scripts are added for you.",
     "custom_css": "Report-local CSS goes in a <style> block at the top of the body fragment, under a `/* report-specific: <name> */` comment. The shared kit's <style> is in the shell's <head> and is not yours to edit. See references/custom-components.md.",
     "colour": "Only design tokens (var(--accent), var(--green), ...). A literal hex anywhere outside the :root token blocks is a bug — one theme goes unreadable.",
-    "javascript": "Components must run with zero JS. The board renders reports in a sandboxed, script-free iframe; anything script-driven is invisible there.",
+    "javascript": "Components must run with zero JS. The board renders reports in a sandboxed, script-free iframe; anything script-driven is invisible there. 1 exception: the mmd-graph component draws with the template's script and falls back to its .mmd text with no JS.",
     "external_assets": "No CDN, no remote fonts, no remote images. Reports must open offline from a file:// path.",
     "caption": "Every diagram or chart-like block gets a sibling <p class=\"cap\">one line saying what the reader should take from it</p>. If the caption can't be written, delete the block.",
     "diagram_budget": 1,
-    "diagram_budget_note": "At most 1 draw.io diagram per report - the big-picture one. A 2nd needs a separate branching flow and a stated reason (pass --diagram-budget 2 to the validator). Components are unlimited.",
+    "diagram_budget_note": "At most 1 diagram per report (a draw.io PNG or an mmd-graph) - the big-picture one. A 2nd needs a separate branching flow and a stated reason (pass --diagram-budget 2 to the validator). Components are unlimited.",
     "diagram_altitude": {
       "principle": "A diagram is the big picture at product altitude - actors, concepts, outcomes in words a non-developer reads. Never the implementation with arrows.",
       "labels": "Plain words, 5 or fewer, one line. No class, file, method, route, or table names (no SalePaymentService, no Report.jsx, no rows(), no GET /x/y, no cash_transactions). No <br/>.",
@@ -92,7 +92,7 @@
     },
     {
       "source_shape": "Branching / merging / cyclic flow with 4+ nodes, told at product altitude (actors, outcomes) - the one big-picture diagram",
-      "component": "diagram"
+      "component": "mmd-graph (default) or diagram (the .drawio was edited by hand, or the page must work with no JS)"
     },
     {
       "source_shape": "None of the above",
@@ -188,22 +188,23 @@
       "name": "Waterfall (staircase) — the default for order",
       "class": "waterfall",
       "container": "card",
-      "use_for": "The DEFAULT for the order of phases or tasks. Each step 1 level deeper waits for the step above it. Steps that can run at the same time sit side by side in 1 .wf-par row at the same depth.",
+      "use_for": "The DEFAULT for the order of phases or tasks. A cascade of same-width bars: each level of --d moves a bar 1 column to the right, and an elbow arrow joins it to the row above. Steps that can run at the same time stack in 1 .wf-par row, joined by a bracket.",
       "inline_vars": {
-        "--d": "Depth, 0 1 2 3 ... — set on each .wf and each .wf-par (not on a .wf inside a .wf-par). +1 = waits for the step above."
+        "--levels": "On the .waterfall: deepest --d + 1. It sets the column width. validate_report.py fails when a --d does not fit.",
+        "--d": "Depth, 0 1 2 3 ... - set on each .wf and each .wf-par (not on a .wf inside a .wf-par). +1 = waits for the step above. Go down 1 level at a time: the arrow always comes from the column to the left."
       },
       "modifiers": {
         "wf.good": "green edge",
         "wf.warn": "amber edge",
         "wf.bad": "red edge",
-        "wf-par": "row of parallel steps: put 2 or more .wf in it; it gets the --d, its steps get none. A CSS label says \"parallel\"."
+        "wf-par": "row of parallel steps: put 2 or more .wf in it; it gets the --d, its steps get none. They stack in 1 column with a bracket and a \"same time\" label."
       },
       "slots": {
         "t": "phase title",
         "d": "one-line consequence"
       },
       "example_lines": [
-        "<div class=\"waterfall\">",
+        "<div class=\"waterfall\" style=\"--levels:3\">",
         "  <div class=\"wf good\" style=\"--d:0\">",
         "    <div class=\"t\">Phase 1 — Provider adapters</div>",
         "    <div class=\"d\">1 class for each bank, behind 1 interface.</div>",
@@ -222,7 +223,9 @@
         "Parallel only when the source says so (\"together\", \"in parallel\", \"independent\"), or when the plan gives the same single blocker for 2 tasks. Never guess parallel work.",
         "A step after a .wf-par waits for ALL steps in that row. If it waits for only 1 of them, say so in its .d line.",
         "Status: .good = complete, .warn = started or blocked, no class = not started. Add a legend or a caption when you use status colours.",
-        "Indent collapses to 0 below 640px so nothing overflows on mobile."
+        "Indent collapses to 0 below 640px so nothing overflows on mobile.",
+        "Under 640px the cascade becomes a short indent with no arrows; the order stays readable.",
+        "Add a .legend under the card when you use status colours: Complete / Started / Not started."
       ]
     },
     {
@@ -665,6 +668,32 @@
         "Build the diagram first (DIAGRAM.md); never write <pre class=\"mermaid\"> in a report.",
         "The PNG keeps a white canvas in dark theme - that is expected.",
         "Click opens the lightbox automatically; do not add handlers."
+      ]
+    },
+    {
+      "id": "mmd-graph",
+      "name": "Inline graph from a .mmd",
+      "class": "mmd",
+      "element": "pre",
+      "container": "card diagram",
+      "use_for": "The one big-picture graph per report, drawn in the page colours so it follows light/dark. Same rules as the draw.io diagram: 4-8 nodes, a branch, merge or cycle, plain words. Mermaid flowchart only (flowchart/graph TD, LR, BT, RL).",
+      "modifiers": {},
+      "slots": {
+        "pre.mmd[data-src]": "path to the .mmd, relative to the report. build_report.py copies the text in.",
+        "p.cap": "required takeaway line (same text as the .mmd caption)"
+      },
+      "example_lines": [
+        "<div class=\"card diagram\">",
+        "  <pre class=\"mmd\" data-src=\"../diagrams/payments/match-flow.mmd\"></pre>",
+        "  <p class=\"cap\">Every payment ends in one cash report.</p>",
+        "</div>"
+      ],
+      "gotchas": [
+        "Start nodes (no arrow in) get the accent edge, end nodes (no arrow out) get the green edge. Write the caption to match.",
+        "A back edge (a loop) is drawn as a dotted arc around the graph; -.-> is dashed.",
+        "Other Mermaid types (sequence, state, ...) are not drawn: the <pre> shows the text. Use the draw.io PNG for those.",
+        "validate_report.py runs the diagram.py lint (altitude + STE) on the inlined text and counts it in the diagram budget.",
+        "Status hand-edited (diagram.py status)? The .drawio is the truth: embed the PNG, not the stale .mmd."
       ]
     }
   ]

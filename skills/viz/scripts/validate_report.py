@@ -22,6 +22,7 @@ import re
 import sys
 from pathlib import Path
 
+import diagram
 import ste_check
 
 COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(")
@@ -67,9 +68,14 @@ def main():
     if re.search(r'<pre class="mermaid"', main_html):
         errors.append('<pre class="mermaid"> found: build the diagram with diagram.py and embed its .drawio.png.')
     pngs = re.findall(r'<img[^>]+src="([^"]+\.drawio\.png)"', main_html)
-    if len(pngs) > a.diagram_budget:
-        errors.append(f"{len(pngs)} diagrams, budget is {a.diagram_budget}. Convert the rest to a rail, swimlane or stack;"
+    graphs = re.findall(r'(?s)<pre class="mmd"[^>]*>(.*?)</pre>', main_html)
+    if len(pngs) + len(graphs) > a.diagram_budget:
+        errors.append(f"{len(pngs) + len(graphs)} diagrams, budget is {a.diagram_budget}. Convert the rest to a rail, swimlane or stack;"
                       " pass --diagram-budget 2 only for a separate branching flow, and say why.")
+    for g in graphs:
+        e, w = diagram.lint_src(htmllib.unescape(g))
+        errors += [f"mmd graph: {x}" for x in e]
+        warnings += [f"mmd graph: {x}" for x in w]
     for src in pngs:
         if not (path.parent / src).exists():
             errors.append(f"diagram image not found (relative to the report): {src}")
@@ -82,6 +88,15 @@ def main():
         if "<img" in chunk and 'class="cap"' not in chunk:
             head = re.sub(r"\s+", " ", re.sub(r"(?s)<[^>]+>", " ", chunk)).strip()[:80]
             warnings.append(f'a .card.diagram has no <p class="cap"> line: {head}')
+
+    # 5b. a waterfall needs --levels = deepest --d + 1, or the last bars run off the card
+    for wf in re.split(r'class="waterfall"', main_html)[1:]:
+        wf = re.split(r'class="waterfall"|</section>', wf)[0]
+        levels = re.match(r'[^>]*--levels:\s*(\d+)', wf)
+        depth = max((int(d) for d in re.findall(r"--d:\s*(\d+)", wf)), default=0)
+        if depth + 1 > (int(levels.group(1)) if levels else 4):
+            errors.append(f'a .waterfall goes to --d:{depth} but has --levels:{levels.group(1) if levels else "4 (default)"}.'
+                          f' Set style="--levels:{depth + 1}" on the .waterfall.')
 
     # 6. unfilled placeholders (whole page: {{PLAN TITLE}} lives in <head>)
     left = sorted(set(re.findall(r"\{\{.+?\}\}", page)))
@@ -112,7 +127,7 @@ def main():
         errors.append("STE words not approved: " + ", ".join(sorted(report.unknown))
                       + ". Replace them (references/substitutions.md), or add technical names/verbs to ./.ste-allow.txt.")
 
-    print(f"checked {path.name}: {len(pngs)} diagram(s), {len(used)} distinct classes\n")
+    print(f"checked {path.name}: {len(pngs) + len(graphs)} diagram(s), {len(used)} distinct classes\n")
     for x in errors:
         print(f"ERROR   {x}")
     for x in warnings:

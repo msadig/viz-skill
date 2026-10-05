@@ -76,8 +76,12 @@ def count_nodes(body):
 
 def lint(mmd):
     """Return (errors, warnings) for one .mmd file."""
+    return lint_src(mmd.read_text(encoding="utf-8"))
+
+
+def lint_src(src):
+    """Return (errors, warnings) for .mmd text (validate_report.py lints inline graphs with it)."""
     errors, warnings = [], []
-    src = mmd.read_text(encoding="utf-8")
     body = "\n".join(l for l in src.splitlines() if not l.lstrip().startswith("%%"))
     first = next((l.strip().split()[0] for l in body.splitlines() if l.strip()), "")
     cap = CAP_RE.search(src)
