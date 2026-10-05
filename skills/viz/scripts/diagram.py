@@ -95,8 +95,8 @@ def lint_src(src):
 
     if first in ("flowchart", "graph"):
         n = count_nodes(body)
-        if n > 8:
-            warnings.append(f"{n} nodes, over 8: that is a system, not a story. Split it or use a report component.")
+        if n > 12:
+            warnings.append(f"{n} nodes, over 12: that is a system, not a story. Split it or use a report component.")
         if n < 4:
             warnings.append(f"{n} nodes, under 4: a step rail or a list reads better than a graph.")
         if not re.search(r"(?m)^\s*\w+\s*\{|-->.*-->|-- \"|\|", body) and n <= 4:

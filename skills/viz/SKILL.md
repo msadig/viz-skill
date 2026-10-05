@@ -59,7 +59,7 @@ Read [REPORT.md](REPORT.md) before you build a report. In short:
 
 - **Product altitude.** Nodes are actors, concepts and outcomes that a non-developer can read. Never use class, file, route, table or function names. Put identifiers in the text or the report's file-touch map.
 - **Earn its place.** Draw a graph only when it has a branch, merge, cycle or cross-cutting edge, AND 4 or more nodes. A straight chain is a list or a `.rail`.
-- **8 nodes or fewer. Labels of 5 words or fewer, on one line.** Do not use `<br/>`.
+- **12 nodes or fewer. Labels of 5 words or fewer, on one line.** Do not use `<br/>`.
 - **Happy path only.** Put error, retry and rollback paths in the text beside the diagram.
 - **Caption is required.** The first line of the `.mmd` is `%% caption: <what the reader must take from it>`. If you cannot write the caption, delete the diagram.
 - Report mode: **1 diagram per report**. A 2nd needs a separate branching flow and a stated reason.

@@ -14,11 +14,11 @@
     "diagram_altitude": {
       "principle": "A diagram is the big picture at product altitude - actors, concepts, outcomes in words a non-developer reads. Never the implementation with arrows.",
       "labels": "Plain words, 5 or fewer, one line. No class, file, method, route, or table names (no SalePaymentService, no Report.jsx, no rows(), no GET /x/y, no cash_transactions). No <br/>.",
-      "nodes": "8 or fewer. More than that is a system, not a story - split into components.",
+      "nodes": "12 or fewer. More than that is a system, not a story - split into components.",
       "edges": "Happy path only. Error, rollback, 4xx/5xx and infrastructure-failure edges belong in a sibling .callout, never in the graph. A branch is a product choice (matched / needs review), not a guard clause.",
       "shapes": "No DB cylinders, no subgraph-per-layer, no condition-from-code edge labels.",
       "identifiers_home": "Technical identifiers live in the file-touch map and breakdown cards. Put them there every time; the diagram never needs them.",
-      "validator": "scripts/diagram.py lint errors on identifiers, <br/>, and error-path words inside labels; warns on >8 nodes and >5-word labels. Fix by rewriting the label at product altitude, not by renaming past the regex."
+      "validator": "scripts/diagram.py lint errors on identifiers, <br/>, and error-path words inside labels; warns on >12 nodes and >5-word labels. Fix by rewriting the label at product altitude, not by renaming past the regex."
     },
     "overflow": "Anything wider than the text column (tables, swimlanes, bridge charts, diagram images) goes in a container with class `card diagram` (which is overflow-x: auto), never a bare card.",
     "diagram_allowed_when": {
@@ -652,7 +652,7 @@
       "class": "diagram",
       "element": "img",
       "container": "card diagram",
-      "use_for": "The one big-picture graph per report: a flow that branches, merges, or cycles, 4-8 nodes, plain words at product altitude. Built with scripts/diagram.py (DIAGRAM.md), embedded as its .drawio.png.",
+      "use_for": "The one big-picture graph per report: a flow that branches, merges, or cycles, 4-12 nodes, plain words at product altitude. Built with scripts/diagram.py (DIAGRAM.md), embedded as its .drawio.png.",
       "modifiers": {},
       "slots": {
         "img": "src = relative path to docs/diagrams/<topic>/<name>.drawio.png, alt = the caption",
@@ -676,7 +676,7 @@
       "class": "mmd",
       "element": "pre",
       "container": "card diagram",
-      "use_for": "The one big-picture graph per report, drawn in the page colours so it follows light/dark. Same rules as the draw.io diagram: 4-8 nodes, a branch, merge or cycle, plain words. Mermaid flowchart only (flowchart/graph TD, LR, BT, RL).",
+      "use_for": "The one big-picture graph per report, drawn in the page colours so it follows light/dark. Same rules as the draw.io diagram: 4-12 nodes, a branch, merge or cycle, plain words. Mermaid flowchart only (flowchart/graph TD, LR, BT, RL).",
       "modifiers": {},
       "slots": {
         "pre.mmd[data-src]": "path to the .mmd, relative to the report. build_report.py copies the text in.",
