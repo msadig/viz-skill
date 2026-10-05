@@ -74,12 +74,12 @@ def main():
         if not (path.parent / src).exists():
             errors.append(f"diagram image not found (relative to the report): {src}")
 
-    # 5. every diagram card has a caption
+    # 5. every picture card (an <img> inside .card.diagram) has a caption
     for m in re.finditer(r'class="card diagram"', main_html):
         rest = main_html[m.end():]
         stops = [i for i in (rest.find('class="card'), rest.find("</section>")) if i > 0]
         chunk = rest[: min(stops)] if stops else rest
-        if 'class="cap"' not in chunk:
+        if "<img" in chunk and 'class="cap"' not in chunk:
             head = re.sub(r"\s+", " ", re.sub(r"(?s)<[^>]+>", " ", chunk)).strip()[:80]
             warnings.append(f'a .card.diagram has no <p class="cap"> line: {head}')
 
@@ -96,7 +96,9 @@ def main():
         warnings.append("classes with no CSS (typo, or custom CSS not added): " + ", ".join(unknown))
 
     # 8. full ASD-STE100 on the prose. Code, headings and footers are not controlled text.
-    prose = re.sub(r"(?is)<(style|code|pre|h[1-6]|footer)\b.*?</\1>|<!--.*?-->", " ", main_html)
+    # headings, table headers and callout labels are titles (rule 8.6), not prose
+    prose = re.sub(r'(?is)(<div class="callout[^"]*">\s*)<b>.*?</b>', r"\1", main_html)
+    prose = re.sub(r"(?is)<(style|code|pre|h[1-6]|th|footer)\b.*?</\1>|<!--.*?-->", " ", prose)
     prose = re.sub(r"(?i)</?(?:a|b|strong|em|i|abbr)\b[^>]*>", " ", prose)
     blocks = [htmllib.unescape(re.sub(r"\s+", " ", b)).strip() for b in re.split(r"<[^>]+>", prose)]
     approved = ste_check.load_approved()

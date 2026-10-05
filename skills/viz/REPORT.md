@@ -9,7 +9,7 @@ In this order:
 2. **Argument**: a path → use it. A topic → glob `docs/superpowers/specs/*<arg>*.md` and `docs/superpowers/plans/*<arg>*.md`, and take the newest match.
 3. **Nothing found**: list the 10 newest files in specs/ and plans/ and ask the user which one.
 
-**Pair rule:** a spec and its plan share a `YYYY-MM-DD-<topic>` stem (the plan can drop `-design`). If there is no exact partner, glob the other folder by the topic words and take the newest match that fits. Read BOTH files. The spec gives the intent, scope and architecture. The plan gives the tasks, the order and the files that change. A spec alone is fine. Tell the user that there is no plan.
+**Pair rule:** a spec and its plan share a `YYYY-MM-DD-<topic>` stem (the plan can drop `-design`). If there is no exact partner, glob the other folder by the topic words and take the newest match that fits. Read BOTH files. The spec gives the intent, scope and architecture. The plan gives the tasks, the order and the files that change. A spec alone is fine. Tell the user that there is no plan. Then the spec's own build order, phases and verify steps are the source for the breakdown and the "Complete when" lines. Remove the plan link from the header.
 
 ## 2. Write the body, build the page
 
@@ -27,6 +27,8 @@ In this order:
 ```
 
 **The output stem** is the plan's stem, else the spec stem without `-design`. The date comes from the stem, not from today.
+
+The page title gets the suffix "— Plan Report". For a page that is not a plan report, pass `--title "<title>" --no-suffix`.
 
 ## 3. Pick the visual
 
@@ -53,10 +55,12 @@ All sections are optional. **Delete a section that has no source material. Never
 | Header | title, doc date, relative links to the source MDs that exist | — |
 | Summary / scope | goal + in-scope / out-of-scope lists | scope grid, `.tiles` |
 | Architecture and flow | only if the spec describes one | `.stack`, `.swim`, `.rail`, or the 1 diagram |
-| Phase / task breakdown | 1 card per phase. Add a "Done means" line only when the plan states a criterion | `.phase` cards, `.waterfall` |
+| Phase / task breakdown | 1 card per phase. Add a "Complete when" line only when the source states a criterion | `.phase` cards, `.waterfall` |
 | Order and dependencies | only when the plan states real blockers | `.chips`, `.rail` |
 | Risks / open questions | stated risks, unknowns, open decisions | `.matrix`, `.callout` |
 | File-touch map | files by layer (Backend, Frontend, Migrations, Tests, Docs, Infra), only the layers that occur | `.layer-grid`, `.bars` |
+
+**Counts** in `.tiles` must come from the source. You can count items that the source lists (for example, phases 0 to 6 = 7 phases). Do not estimate.
 
 **Identifiers have a home.** File names, classes and routes go in `<code>` in the breakdown cards and the file-touch map. They never go in the diagram. `<code>` content is exempt from STE.
 
@@ -64,7 +68,9 @@ All sections are optional. **Delete a section that has no source material. Never
 
 ## 5. STE in the report
 
-All prose in the report obeys full ASD-STE100 ([STE.md](STE.md)): paragraphs, list items, captions, tiles, callouts. Headings, `<code>`, `<pre>` and the footer are exempt. The validator runs strict STE on the prose. Write in STE from the start, because a rewrite after the validator runs costs more.
+All prose in the report obeys full ASD-STE100 ([STE.md](STE.md)): paragraphs, list items, table cells, captions, tiles, callouts. Headings, table headers (`<th>`), callout labels (the first `<b>`), `<code>`, `<pre>` and the footer are exempt.
+
+A capitalized word inside a sentence counts as a name (Tailscale, Private Relay), so product names pass. Use the official capitals. The validator runs strict STE on the prose. Write in STE from the start, because a rewrite after the validator runs costs more.
 
 The source spec is often not in STE. Do not copy its sentences. Rewrite each one.
 

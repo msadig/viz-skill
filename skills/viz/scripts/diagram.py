@@ -253,6 +253,8 @@ def cmd_status(a):
         stems |= {paths(f)[0] for f in files}
     for mmd in sorted(stems):
         print(f"{state(*paths(mmd)):<34} {mmd.with_suffix('')}")
+    if not stems:
+        print(f"no diagrams in {' '.join(map(str, targets))}")
     return 0
 
 

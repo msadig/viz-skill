@@ -13,7 +13,7 @@ docs/diagrams/<topic>/
 
 ## Workflow
 
-1. **Status first.** If the topic folder exists, run `scripts/diagram.py status docs/diagrams/<topic>`.
+1. **Status first.** Always run `<skill>/scripts/diagram.py status docs/diagrams/<topic>`. `no diagrams in ...` means a new topic.
    - `clean`: the `.mmd` is the source of truth. Edit the `.mmd`.
    - `hand-edited`: the `.drawio` is the source of truth. Go to [Edit a hand-edited diagram](#edit-a-hand-edited-diagram).
    - `drawio-only`: there is no `.mmd`. Treat it as hand-edited.

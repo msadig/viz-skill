@@ -215,9 +215,18 @@ def check_sentence(sent, mode, report, loc):
 
 
 def check_vocab(text, report, approved):
-    for word in re.findall(r"[A-Za-z]+(?:-[A-Za-z]+)*", text):
-        if word.isupper() or any(c.isupper() for c in word[1:]):
-            continue  # acronym, identifier, or quoted text
+    words = list(re.finditer(r"[A-Za-z]+(?:-[A-Za-z]+)*", text))
+
+    def mid_sentence(m):
+        before = text[:m.start()].rstrip()
+        return bool(before) and before[-1] not in ".!?:"
+
+    # capitalised inside a sentence = a name (product, system, place); then it is a name everywhere
+    names = {m.group(0) for m in words if m.group(0)[0].isupper() and mid_sentence(m)}
+    for m in words:
+        word = m.group(0)
+        if word.isupper() or any(c.isupper() for c in word[1:]) or word in names:
+            continue  # acronym, identifier, or name
         lw = word.lower()
         if lw in approved or lw in ING_APPROVED or len(lw) <= 1:
             continue
@@ -273,8 +282,13 @@ def load_approved(extra_allow=()):
         if f.exists():
             for line in f.read_text(encoding="utf-8").splitlines():
                 w = line.split("#", 1)[0].strip().lower()
-                if w:
-                    approved.add(w)
+                if not w:
+                    continue
+                approved |= {w, w + "s", w + "es", w + "d", w + "ed"}
+                if w.endswith("y"):
+                    approved.add(w[:-1] + "ies")
+                if w.endswith("ing"):
+                    ING_APPROVED.add(w)  # a technical name with "-ing" (rule 3.5)
     return approved
 
 

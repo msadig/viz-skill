@@ -21,7 +21,7 @@ No mode given? A request for one picture → diagram. A spec/plan → report.
 ```bash
 mkdir -p docs/diagrams/payments
 # write docs/diagrams/payments/match-flow.mmd (first line: %% caption: ...)
-<skill>/scripts/diagram.py status docs/diagrams/payments   # ALWAYS first, when files exist
+<skill>/scripts/diagram.py status docs/diagrams/payments   # ALWAYS first
 <skill>/scripts/diagram.py build  docs/diagrams/payments/match-flow.mmd
 ```
 

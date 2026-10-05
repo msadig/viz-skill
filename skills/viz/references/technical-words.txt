@@ -68,3 +68,37 @@ webhook
 webhooks
 workflow
 workflows
+# Time units (category 9 of the technical names).
+second
+minute
+hour
+day
+week
+month
+monthly
+year
+# General IT terms (category 19 of the technical names).
+admin
+certificate
+console
+decryption
+disk
+encryption
+firewall
+forwarding
+internet
+kernel
+key
+node
+packet
+password
+pinning
+port
+profile
+reboot
+regex
+subnet
+timer
+tunnel
+uptime
+web
