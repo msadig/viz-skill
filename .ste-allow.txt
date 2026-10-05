@@ -1,0 +1,4 @@
+# draw.io is a product name. The checker splits it at the dot.
+draw
+io
+viz

@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.11"
+# requires-python = ">=3.9"
 # dependencies = []
 # ///
 """The viz diagram pipeline: .mmd -> .drawio -> .drawio.png. All three files stay.
@@ -135,7 +135,9 @@ def drawio_bin():
     for c in (shutil.which("drawio"), "/Applications/draw.io.app/Contents/MacOS/draw.io"):
         if c and Path(c).exists():
             return c
-    sys.exit("draw.io desktop not found. Install it: brew install --cask drawio")
+    sys.exit("draw.io Desktop is not installed, so this step cannot make the .drawio or the PNG.\n"
+             "The lint passed. Suggest to the user: brew install --cask drawio (see doctor.py).\n"
+             "Without it: write the .drawio XML by hand (DIAGRAM.md), and the user exports the PNG in draw.io.")
 
 
 def run(*args):

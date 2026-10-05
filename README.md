@@ -23,12 +23,15 @@ npx skills add msadig/viz-skill -g -a claude-code
 
 Update: `npx skills update`. Remove: `npx skills remove viz`.
 
-## Requirements
+## Optional tools
+
+You must have Python 3.9 or more. The tools that follow make the result better. The skill starts `scripts/doctor.py`, which examines the tools and shows the tools to install.
 
 | Tool | For | Install |
 |---|---|---|
-| [uv](https://docs.astral.sh/uv/) | runs the scripts (Python 3.11+, no packages) | `brew install uv` |
-| [draw.io Desktop](https://www.drawio.com/) | `.mmd` → `.drawio` → `.png` | `brew install --cask drawio` |
+| [uv](https://docs.astral.sh/uv/) | runs the scripts directly. Without uv, the agent uses `python3`. | `brew install uv` |
+| [draw.io Desktop](https://www.drawio.com/) | `.mmd` → `.drawio` → `.png`. Without it, the agent writes `.drawio` XML by hand and you export the PNG. | `brew install --cask drawio` |
+| [drawio skill](https://github.com/jgraph/drawio-mcp) | the draw.io XML reference for hand edits and AWS or network shapes | `npx skills add jgraph/drawio-mcp -g` |
 
 ## Use
 
@@ -41,6 +44,19 @@ Diagrams go to `docs/diagrams/<topic>/`. The skill opens the PNG after it builds
 
 If you edit a `.drawio` by hand, the `.drawio` becomes the source of truth. The skill will not rebuild over your edits. It edits the `.drawio` and marks the `.mmd` as `STALE`.
 
+## How /viz works
+
+![1 request gives a diagram or a report. You can change each diagram in draw.io.](docs/diagrams/viz/how-viz-works.drawio.png)
+
+*1 request gives a diagram or a report. You can change each diagram in draw.io.*
+
+/viz made this diagram. Its 3 files are in `docs/diagrams/viz/`.
+
+- **Diagram.** The agent writes a Mermaid file. A script changes the Mermaid file into a draw.io file, and then into a PNG. The 3 files stay together.
+- **Report.** The agent reads the spec and the plan. Then it writes 1 HTML file. The HTML file can show 1 diagram as a PNG.
+- **Your changes.** You can change the draw.io file in draw.io. After that, the agent uses the draw.io file and not the Mermaid file. The agent does not write over your changes.
+- **Language.** All the information in diagrams and reports, and in the agent output, obeys Simplified Technical English (ASD-STE100). A script finds each item that is not approved.
+
 ## Layout
 
 ```
@@ -49,7 +65,7 @@ skills/viz/
   DIAGRAM.md     diagram workflow
   REPORT.md      report workflow
   STE.md         the STE rules
-  scripts/       diagram.py, build_report.py, validate_report.py, ste_check.py
+  scripts/       doctor.py, diagram.py, build_report.py, validate_report.py, ste_check.py
   references/    component catalog, body skeleton, STE rules and word list
   assets/        report template, component demo page
 ```

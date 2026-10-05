@@ -1,0 +1,11 @@
+%% caption: 1 request gives a diagram or a report. You can change each diagram in draw.io.
+%% drawio-sha: e0a373e68e1a7d0f
+flowchart TD
+  A["You request a diagram"] --> B{"Spec or plan?"}
+  B -- "no" --> C["Agent writes Mermaid file"]
+  B -- "yes" --> D["Agent writes HTML report"]
+  C --> E["draw.io file"]
+  E --> F["PNG for PRs"]
+  E --> G["You change it in draw.io"]
+  G --> F
+  F --> D

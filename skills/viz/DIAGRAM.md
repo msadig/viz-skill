@@ -65,7 +65,7 @@ The picture rules and STE apply to hand edits too. `lint` reads only `.mmd` file
 
 ## draw.io notes
 
-- The scripts need draw.io Desktop (`brew install --cask drawio`). They find `drawio` on PATH or in `/Applications/draw.io.app`.
+- `build` and `export` use draw.io Desktop (`brew install --cask drawio`). They find `drawio` on PATH or in `/Applications/draw.io.app`. Without it, `lint` and `status` still work. Write the `.drawio` XML by hand, and the user exports the PNG in draw.io with "Include a copy of my diagram" set.
 - Mermaid → PNG in one step is broken in draw.io Desktop. The script always goes `.mmd` → `.drawio` → PNG.
 - The PNG has a white background in every theme, because people paste it into GitHub, docs and chat.
 - The user can open the `.drawio.png` itself in draw.io, because the XML is embedded. The `.drawio` is still the file to edit.

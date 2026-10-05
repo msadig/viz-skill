@@ -102,3 +102,4 @@ timer
 tunnel
 uptime
 web
+skill

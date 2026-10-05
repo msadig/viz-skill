@@ -16,6 +16,14 @@ No mode given? A request for one picture → diagram. A spec/plan → report.
 
 `<skill>` below means the directory of this SKILL.md (for Claude Code with a global install: `~/.claude/skills/viz`). The scripts are uv scripts, so run them directly. Run them from the project root, because they read `./.ste-allow.txt` and use `docs/diagrams` as the default directory.
 
+## Before you start
+
+The first time you use viz in a session, run `python3 <skill>/scripts/doctor.py`. It checks 3 optional tools: uv, draw.io Desktop and the drawio skill. It never fails. For each `SUGGEST` line, tell the user 1 time what to install and why, then continue. Do not stop the task.
+
+- No uv: run each script as `python3 <skill>/scripts/<name>.py`.
+- No draw.io Desktop: `build` stops after the lint. Write the `.drawio` XML by hand (DIAGRAM.md), and tell the user to export the PNG in draw.io.
+- No drawio skill: hand edits of `.drawio` XML get no XML reference. Be careful with the XML.
+
 ## Diagram mode: quick start
 
 ```bash
@@ -70,6 +78,7 @@ Write this message in STE. Give the user the absolute path(s) in a fenced block 
 | [DIAGRAM.md](DIAGRAM.md) | Diagram workflow, .mmd format, edit loop, draw.io gotchas |
 | [REPORT.md](REPORT.md) | Report workflow, sections, components, validation |
 | [STE.md](STE.md) | ASD-STE100 rules to obey while you write |
+| `scripts/doctor.py` | checks the optional tools, suggests installs (plain python3) |
 | `scripts/diagram.py` | lint / build / export / status |
 | `scripts/build_report.py`, `scripts/validate_report.py` | report splice and checks |
 | `scripts/ste_check.py` | STE checker (`--strict`, `--allow FILE`) |
