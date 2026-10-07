@@ -1,11 +1,41 @@
-%% caption: 1 request gives a diagram or a report. You can change each diagram in draw.io.
-%% drawio-sha: e0a373e68e1a7d0f
-flowchart TD
-  A["You request a diagram"] --> B{"Spec or plan?"}
-  B -- "no" --> C["Agent writes Mermaid file"]
-  B -- "yes" --> D["Agent writes HTML report"]
-  C --> E["draw.io file"]
-  E --> F["PNG for PRs"]
-  E --> G["You change it in draw.io"]
-  G --> F
-  F --> D
+%% caption: 1 request gives a diagram or a report. You can change each diagram in draw.io. Blue = you, green = agent step, purple = file, orange = correction.
+%% drawio-sha: 58e865f4d6683b61
+flowchart LR
+  A["You request a diagram<br/>or a report"]:::actor
+  B{"Spec or plan?"}:::decision
+  subgraph DIA["Diagram mode"]
+    C["Agent writes Mermaid file"]:::step
+    L{"Lint and word check"}:::decision
+    M[("Mermaid file<br/>for agents")]:::store
+    E[("draw.io file<br/>for you")]:::store
+    F[("PNG file<br/>for PRs and docs")]:::store
+  end
+  subgraph REP["Report mode"]
+    D["Agent reads spec and plan"]:::step
+    H["Agent writes HTML file"]:::step
+    V{"Validator checks page"}:::decision
+    R[("HTML report<br/>light and dark")]:::store
+  end
+  G["You change it in draw.io"]:::actor
+  X["Agent fixes the words"]:::warn
+  A --> B
+  B -- "no" --> C
+  B -- "yes" --> D
+  C --> L
+  L -- "yes" --> M
+  M --> E
+  E --> F
+  L -. "no" .-> X
+  X -.-> C
+  E --> G
+  G -- "export" --> F
+  D --> H
+  H --> V
+  V -- "yes" --> R
+  V -. "no" .-> X
+  F -. "1 diagram" .-> R
+  classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+  classDef step fill:#d5e8d4,stroke:#82b366,color:#000
+  classDef decision fill:#fff2cc,stroke:#d6b656,color:#000
+  classDef store fill:#e1d5e7,stroke:#9673a6,color:#000
+  classDef warn fill:#ffe6cc,stroke:#d79b00,color:#000

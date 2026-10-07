@@ -74,6 +74,8 @@ def main():
                       " pass --diagram-budget 2 only for a separate branching flow, and say why.")
     for g in graphs:
         e, w = diagram.lint_src(htmllib.unescape(g))
+        if re.search(r"(?m)^\s*(?:classDef|subgraph)\b", htmllib.unescape(g)):
+            w.append("inline graph has classDef or subgraph: the page drops them. Embed the .drawio.png.")
         errors += [f"mmd graph: {x}" for x in e]
         warnings += [f"mmd graph: {x}" for x in w]
     for src in pngs:

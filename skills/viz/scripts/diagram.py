@@ -36,9 +36,9 @@ CAP_RE = re.compile(r"^%%\s*caption:\s*(.+?)\s*$", re.M)
 STALE_LINE = "%% STALE: the .drawio was edited by hand. The .drawio is the source of truth."
 
 # ------------------------------------------------------------------ lint rules
-# A diagram is the big picture in plain words. Code identifiers, multi-line
-# labels and error-path edges mean it was drawn at implementation altitude --
-# rewrite the label, do not rename past the regex.
+# A diagram must carry the real flow: groups, colour, the main path AND the
+# failure paths. Code identifiers are a warning: a plain name reads better for
+# a non-developer, but the agent decides.
 IDENTIFIERS = [
     (r"\b[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)+\b", "CamelCase class / component name"),
     (r"\b[a-z0-9]+_[a-z0-9_]+\b", "snake_case table / column / variable"),
@@ -48,10 +48,6 @@ IDENTIFIERS = [
     (r"\b[1-5]\d\d\b", "HTTP status code"),
     (r"\b(?:mysql|sqlite|postgres|redis|sql|db|json|http|cdn|jwt|uuid|null|bool)\b", "plumbing term"),
 ]
-ERROR_PATH = re.compile(
-    r"(?i)\b(?:rollback|roll back|rolled back|exception|throws?|fails?|failure|error|"
-    r"timeout|retry|retries|crash|abort|invalid|reject(?:ed)?)\b"
-)
 KEYWORDS = {"flowchart", "graph", "lr", "rl", "td", "tb", "bt", "subgraph", "end", "classdef",
             "class", "style", "linkstyle", "click", "direction", "default"}
 
@@ -88,23 +84,19 @@ def lint_src(src):
 
     if not cap:
         errors.append("no '%% caption: <one line>' header. Cannot write the caption? Delete the diagram.")
-    if re.search(r"(?i)<br\s*/?>", body):
-        errors.append("a label uses <br/>: one line, five words or fewer.")
     if re.search(r"(?m)^\s*%%\{", src):
         warnings.append("an %%{init}%% block: draw.io sets the style, drop it.")
 
     if first in ("flowchart", "graph"):
         n = count_nodes(body)
-        if n > 12:
-            warnings.append(f"{n} nodes, over 12: that is a system, not a story. Split it or use a report component.")
+        if n > 30:
+            warnings.append(f"{n} nodes, over 30: hard to read. Split it into 2 diagrams.")
         if n < 4:
             warnings.append(f"{n} nodes, under 4: a step rail or a list reads better than a graph.")
         if not re.search(r"(?m)^\s*\w+\s*\{|-->.*-->|-- \"|\|", body) and n <= 4:
             warnings.append("no branch, merge or cycle visible: does this diagram earn its place?")
-        if re.search(r"(?im)^\s*subgraph\b", body):
-            warnings.append("subgraph: layer boxes are plumbing, not story.")
-        if "[(" in body:
-            warnings.append("database cylinder: say what happens, not where it is stored.")
+        if n >= 6 and not re.search(r"(?m)^\s*classDef\b", body):
+            warnings.append("no classDef: colour the nodes by role (DIAGRAM.md palette).")
 
     for text in labels(body):
         text = text.strip()
@@ -112,24 +104,24 @@ def lint_src(src):
             continue
         for pattern, why in IDENTIFIERS:
             if re.search(pattern, text):
-                errors.append(f'label "{text}" contains a {why}. Draw at product altitude: actors, concepts, outcomes.')
+                warnings.append(f'label "{text}" contains a {why}. A plain name reads better, unless the reader needs the identifier.')
                 break
-        if ERROR_PATH.search(text):
-            errors.append(f'label "{text}" is an error path. Happy path only; put failures in the text beside the diagram.')
-        if len(text.split()) > 5:
-            warnings.append(f'label "{text}" has {len(text.split())} words (max 5).')
+        for line in re.split(r"(?i)<br\s*/?>", text):
+            if len(line.split()) > 8:
+                warnings.append(f'label line "{line.strip()}" has {len(line.split())} words (max 8). Use <br/> for a 2nd line.')
 
-    # Full ASD-STE100 on every label and the caption. Each label is its own paragraph.
+    # ASD-STE100 on every label and the caption, as warnings only: a diagram
+    # label must read naturally ("payment", "team"), so the agent decides.
     approved = ste_check.load_approved()
     report = ste_check.Report()
     for text in labels(body) + ([cap.group(1)] if cap else []):
-        if text.strip():
-            ste_check.check_text(text.strip() + "\n", "descriptive", report, f'"{text.strip()}"', approved)
-    errors += [f"STE {loc} [rule {rule}] {msg}" for loc, rule, msg in report.errors]
-    warnings += [f"STE {loc} [rule {rule}] {msg}" for loc, rule, msg in report.warnings]
+        text = re.sub(r"(?i)\s*<br\s*/?>\s*", " ", text).strip()
+        if text:
+            ste_check.check_text(text + "\n", "descriptive", report, f'"{text}"', approved)
+    warnings += [f"STE {loc} [rule {rule}] {msg}" for loc, rule, msg in report.errors + report.warnings]
     if report.unknown:
-        errors.append("STE words not approved: " + ", ".join(sorted(report.unknown))
-                      + ". Replace them (references/substitutions.md), or add a technical name/verb to ./.ste-allow.txt.")
+        warnings.append("STE words not approved: " + ", ".join(sorted(report.unknown))
+                        + ". Keep a word if it is the clearest one for the reader.")
     return errors, warnings
 
 

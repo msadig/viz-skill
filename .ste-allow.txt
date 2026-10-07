@@ -2,3 +2,6 @@
 draw
 io
 viz
+# Words of this skill's own diagrams.
+validator
+docs

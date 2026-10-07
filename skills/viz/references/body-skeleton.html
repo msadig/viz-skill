@@ -61,18 +61,17 @@
     </div>
     <!-- ONLY if the flow branches, merges, or cycles AND has 4+ nodes,
          replace the card above with this one (delete it otherwise).
-         This is THE big-picture diagram (one per report): actors, concepts,
-         outcomes in plain words. No class/file/route/table names, no <br/>,
-         no error or rollback edges (those go in a .callout), max 12 nodes,
-         labels of 5 words or fewer. Read the labels aloud - a story, not code.
-         Build it first with scripts/diagram.py (see DIAGRAM.md), then draw the
-         .mmd in the page (it follows the theme; build_report.py copies it in):
+         This is THE big-picture diagram (one per report): who starts it, what
+         it becomes, where it lands. Colour by role, groups, failure paths as
+         dotted edges (DIAGRAM.md palette). Build it first with
+         scripts/diagram.py, then embed its PNG (it keeps colours and groups):
     <div class="card diagram">
-      <pre class="mmd" data-src="../diagrams/{{topic}}/{{name}}.mmd"></pre>
+      <img src="../diagrams/{{topic}}/{{name}}.drawio.png" alt="{{caption}}">
       <p class="cap">{{caption: what the reader should take from this}}</p>
     </div>
-         If diagram.py status says hand-edited, embed the PNG in place of the <pre>:
-      <img src="../diagrams/{{topic}}/{{name}}.drawio.png" alt="{{caption}}">
+         Small flowchart with no colours and no groups? An inline graph follows
+         the page theme. Put it in place of the <img>:
+      <pre class="mmd" data-src="../diagrams/{{topic}}/{{name}}.mmd"></pre>
     -->
   </section>
 

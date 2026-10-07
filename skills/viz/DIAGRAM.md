@@ -19,23 +19,64 @@ docs/diagrams/<topic>/
    - `drawio-only`: there is no `.mmd`. Treat it as hand-edited.
    - `(png out of date)`: run `export`.
 2. **Decide if a graph earns its place** (SKILL.md picture rules). If it does not, tell the user and suggest a list or table. Do not draw it.
-3. **Write the `.mmd`.** Header first, then the diagram:
+3. **Write the `.mmd`.** Header first, then the diagram. Use groups, colour and the failure paths:
    ```
-   %% caption: Each payment ends in 1 cash report.
+   %% caption: Each payment goes to a match. A person examines each payment that does not match.
    flowchart LR
-     A["Cashier records sale"] --> B{"Payment matches invoice?"}
-     B -- "yes" --> C["Invoice closes"]
-     B -- "no" --> D["Person examines payment"]
-     D --> C
-     C --> E["Cash report"]
+     subgraph IN["Input"]
+       A["Customer pays<br/>card or bank"]:::actor
+       B["Bank sends daily file"]:::ext
+     end
+     subgraph CORE["Payment service"]
+       C["Record payment"]:::step
+       D{"Payment matches invoice?"}:::decision
+       E[("Payments store")]:::store
+     end
+     F["Invoice closes"]:::ok
+     G["Person examines payment"]:::warn
+     H["Payment stays open"]:::bad
+     A --> C
+     B --> C
+     C --> E
+     C --> D
+     D -- "yes" --> F
+     D -- "no" --> G
+     G -- "match found" --> F
+     G -. "no match" .-> H
+     classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+     classDef ext fill:#f5f5f5,stroke:#666666,color:#000
+     classDef step fill:#d5e8d4,stroke:#82b366,color:#000
+     classDef decision fill:#fff2cc,stroke:#d6b656,color:#000
+     classDef store fill:#e1d5e7,stroke:#9673a6,color:#000
+     classDef ok fill:#d5e8d4,stroke:#82b366,color:#000,stroke-width:2px
+     classDef warn fill:#ffe6cc,stroke:#d79b00,color:#000
+     classDef bad fill:#f8cecc,stroke:#b85450,color:#000
    ```
-   - Put every label in double quotes. Do not put raw `<`, `>` or `&` in a label.
+   - Put every label in double quotes. Do not put raw `<`, `>` or `&` in a label. `<br/>` is the only tag.
    - Use `flowchart LR` for flows and `flowchart TD` for hierarchies. Sequence, state, ER, timeline and the other Mermaid types also convert.
-   - Do not add `%%{init}%%` or colour `classDef`. draw.io styles the diagram, and the user restyles it there.
-   - Match the label language to the user's language. In English, obey STE.
+   - Do not add `%%{init}%%`. draw.io keeps `classDef`, `:::class`, `style`, subgraphs, `[( )]` stores and dotted edges.
+   - Match the label language to the user's language. In English, prefer STE words, but use the clearest word for the reader. STE findings are warnings.
+
+### Colour palette
+
+Copy only the `classDef` lines that the diagram uses. These are the draw.io default colours, so the user can restyle in draw.io with the same palette.
+
+| Class | Colour | For |
+|---|---|---|
+| `actor` | blue | a person or a team that starts something |
+| `step` | green | an action of the system |
+| `decision` | yellow | a question with 2 or more answers (`{"..."}`) |
+| `store` | purple | data that stays (`[("...")]`) |
+| `ext` | grey | an external system or a supplier |
+| `ok` | green, thick border | a good end result |
+| `warn` | orange | a manual step, a retry, a wait |
+| `bad` | red | a failure end result |
+
+To colour a subgraph, add `style CORE fill:#f9f9f9,stroke:#999999`.
+
 4. **Build:** `scripts/diagram.py build docs/diagrams/<topic>/<name>.mmd`
    - It runs `lint` first. Fix every ERROR in the `.mmd`. Do not use `--no-lint` to get past the lint. An altitude error means you must rewrite the label in plain words. Do not rename the label only to get past the regex.
-   - Read each WARN and decide. An under-4-nodes warning usually means you must delete the graph.
+   - Read each WARN and decide. A `no classDef` warning means: add the colours.
 5. **Look at the PNG** (Read the file) before you report it. `build` and `export` also open it for the user. Pass `--no-open` only when the user says not to open it. Bad layout? Change the direction (`LR` ↔ `TD`) or the node order, then build again.
 6. **Report** the three paths and the caption. Write the report in STE.
 
@@ -52,7 +93,7 @@ The user moved, restyled or added things in draw.io. Those edits live only in th
 3. Run `scripts/diagram.py export docs/diagrams/<topic>/<name>.drawio`. It re-exports the PNG and marks the `.mmd` `STALE`.
 4. Leave the `STALE` `.mmd` in place. It is history, not truth. Rebuild from it only when the user says to discard the draw.io edits (`build --force`).
 
-The picture rules and STE apply to hand edits too. `lint` reads only `.mmd` files, so check your new labels yourself.
+The picture rules apply to hand edits too. `lint` reads only `.mmd` files, so check your new labels yourself.
 
 ## Commands
 

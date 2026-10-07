@@ -104,3 +104,15 @@ uptime
 web
 skill
 built
+# Colour names, for the legend in a diagram caption.
+blue
+green
+yellow
+purple
+grey
+gray
+orange
+red
+mermaid
+lint
+export

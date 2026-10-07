@@ -36,14 +36,14 @@ A diagram that only repeats a list wastes the reader's first 10 seconds. Use the
 
 - The reader's problem is never "not enough boxes".
 - **Components first**: `.rail` (stages), `.stack` (tiers), `.swim` (actor × stage), `.tiles` (counts), `.matrix` (risk), `.timeline`, `.chips` (2 or 3 order facts), `.compare`, `.status-table`, `.callout`. There is no limit on components.
-- **At most 1 diagram**: the big-picture one. It shows who starts the feature, what it becomes, and where it lands. Build it in diagram mode, in `docs/diagrams/<topic>/`. Then put it in the architecture section as an inline graph. `build_report.py` copies the `.mmd` text in, and the template script draws it in the page colours (start node = accent edge, end node = green edge):
+- **At most 1 diagram**: the big-picture one. It shows who starts the feature, what it becomes, and where it lands. Build it in diagram mode, in `docs/diagrams/<topic>/`, with its colours and groups. Then put its PNG in the architecture section:
   ```html
   <div class="card diagram">
-    <pre class="mmd" data-src="../diagrams/<topic>/<name>.mmd"></pre>
+    <img src="../diagrams/<topic>/<name>.drawio.png" alt="<caption>">
     <p class="cap"><caption></p>
   </div>
   ```
-  Use the PNG (`<img src="../diagrams/<topic>/<name>.drawio.png" alt="<caption>">`) in place of the `<pre>` when 1 of these is true: `diagram.py status` says `hand-edited`, the `.mmd` is not a flowchart, or the page must work with no JS. The validator lints the inline `.mmd` (altitude and STE) and counts it in the budget.
+  The PNG keeps the colours, the groups and the draw.io layout. An inline graph (`<pre class="mmd" data-src="../diagrams/<topic>/<name>.mmd"></pre>`) draws in the page colours and follows the light or dark theme, but it ignores `classDef` colours and subgraphs and it is good only for about 12 nodes. Use it only for a small flowchart with no colours and no groups. The validator lints an inline `.mmd` (altitude and STE), warns when it has colours or groups, and counts it in the budget.
 - All links and `src` paths are relative to the report file. With the default folders, a diagram is `../diagrams/...` and a spec is `../specs/...`. With other folders, calculate the relative path. The validator stops when a diagram PNG is not found.
 - A 2nd diagram needs a separate flow that branches. Say why in the summary, and validate with `--diagram-budget 2`. Zero diagrams is a good report.
 - **Build order = cascade (`.waterfall`), always.** It shows what waits for what, and what can run in parallel:

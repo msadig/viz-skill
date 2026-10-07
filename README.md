@@ -6,8 +6,8 @@ An agent skill that makes diagrams and plan reports that a non-developer can rea
   - the `.mmd` is for agents,
   - the `.drawio` is for you (drag and drop in draw.io),
   - the `.drawio.png` is for PRs, docs and chat.
-- **Report mode** turns a spec/plan markdown into 1 HTML page (light and dark themes, offline, zero JS in the content), a cascade build order, and at most 1 diagram drawn from its `.mmd`.
-- **All words obey ASD-STE100** Simplified Technical English. This includes labels, captions, report text and the agent's messages to you.
+- **Report mode** turns a spec/plan markdown into 1 HTML page (light and dark themes, offline, zero JS in the content), a cascade build order, and at most 1 diagram (its `.drawio.png`).
+- **Report text obeys ASD-STE100** Simplified Technical English, and so do the agent's messages to you. Diagram labels use STE as a guide: a word that is not approved gives a warning, not an error.
 
 ## Install
 
@@ -46,16 +46,17 @@ If you edit a `.drawio` by hand, the `.drawio` becomes the source of truth. The 
 
 ## How /viz works
 
-![1 request gives a diagram or a report. You can change each diagram in draw.io.](docs/diagrams/viz/how-viz-works.drawio.png)
+![1 request gives a diagram or a report. You can change each diagram in draw.io. Blue = you, green = agent step, purple = file, orange = correction.](docs/diagrams/viz/how-viz-works.drawio.png)
 
-*1 request gives a diagram or a report. You can change each diagram in draw.io.*
+*1 request gives a diagram or a report. You can change each diagram in draw.io. Blue = you, green = agent step, purple = file, orange = correction.*
 
 /viz made this diagram. Its 3 files are in `docs/diagrams/viz/`.
 
 - **Diagram.** The agent writes a Mermaid file. A script changes the Mermaid file into a draw.io file, and then into a PNG. The 3 files stay together.
-- **Report.** The agent reads the spec and the plan. Then it writes 1 HTML file. The build order shows as a cascade. The HTML file can show 1 diagram. The page draws it from the Mermaid file in the page colours.
+- **Report.** The agent reads the spec and the plan. Then it writes 1 HTML file. The build order shows as a cascade. The HTML file can show 1 diagram, as its PNG with colours.
 - **Your changes.** You can change the draw.io file in draw.io. After that, the agent uses the draw.io file and not the Mermaid file. The agent does not write over your changes.
-- **Language.** All the information in diagrams and reports, and in the agent output, obeys Simplified Technical English (ASD-STE100). A script finds each item that is not approved.
+- **Colours.** Each type of node has a colour: you, an agent step, a decision, a file. The diagram also shows the groups and the paths that go back to a correction.
+- **Language.** Reports and the agent output obey Simplified Technical English (ASD-STE100). For diagram labels, STE is a guide. A script finds each word that is not approved.
 
 ## Layout
 
